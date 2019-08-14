@@ -1,0 +1,11 @@
+#if($dbType != "h2")
+spring.datasource: # Please adjust username, password, hostname, port and database name
+  type: $dbClassRef
+  username: username
+  password: password
+  url: jdbc:$dbType://hostname:port/dbName
+
+#end
+camunda.bpm.admin-user:
+  id: $adminUsername
+  password: $adminPassword
