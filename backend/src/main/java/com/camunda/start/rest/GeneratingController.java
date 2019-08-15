@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class GeneratingController {
 
   @ExceptionHandler({ BadUserRequestException.class })
-  @PostMapping(value = "/download/{myProject}.zip")
+  @PostMapping(value = "/download")
   public @ResponseBody byte[] downloadProject(@RequestBody DownloadProjectDto dto) {
 
     ProjectGenerator projectGenerator = new ProjectGenerator(dto);

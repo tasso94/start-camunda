@@ -24,10 +24,11 @@ import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 public class ProjectGenerator {
@@ -48,9 +49,51 @@ public class ProjectGenerator {
 
   public ProjectGenerator(DownloadProjectDto dto) {
     this.dto = dto;
+    initDto(dto);
     this.context = new HashMap<>();
     initContext(context);
     this.templateProcessor = new TemplateProcessor(context);
+  }
+
+  protected void initDto(DownloadProjectDto dto) {
+    if (isEmpty(dto.getModules())) {
+      dto.setModules(new HashSet<>(Collections.singleton("camunda-rest")));
+    }
+    if (isEmpty(dto.getGroup())) {
+      dto.setGroup("com.example.workflow");
+    }
+    if (isEmpty(dto.getDatabase())) {
+      dto.setDatabase("postgresql");
+    }
+    if (isEmpty(dto.getArtifact())) {
+      dto.setArtifact("my-project");
+    }
+    if (isEmpty(dto.getCamundaVersion())) {
+      dto.setCamundaVersion("7.12.0");
+    }
+    if (isEmpty(dto.getJavaVersion())) {
+      dto.setJavaVersion("12");
+    }
+    if (isEmpty(dto.getUsername())) {
+      dto.setUsername("demo");
+    }
+    if (isEmpty(dto.getPassword())) {
+      dto.setPassword("demo");
+    }
+    if (isEmpty(dto.getVersion())) {
+      dto.setVersion("1.0.0-SNAPSHOT");
+    }
+    if (isEmpty(dto.getSpringBootVersion())) {
+      dto.setSpringBootVersion("2.1.0.RELEASE");
+    }
+  }
+
+  private boolean isEmpty(String string) {
+    return string == null || string.isEmpty();
+  }
+
+  private boolean isEmpty(Set<String> set) {
+    return set == null || set.isEmpty();
   }
 
   public byte[] generate() {
@@ -84,8 +127,6 @@ public class ProjectGenerator {
   }
 
   protected void initContext(Map<String, Object> context) {
-    ensureNotNull();
-
     context.put("packageName", dto.getGroup());
 
     context.put("dbType", dto.getDatabase());
@@ -103,23 +144,6 @@ public class ProjectGenerator {
     context.put("projectVersion", dto.getVersion());
 
     context.put("dependencies", getDeps(dto.getModules()));
-  }
-
-  protected void ensureNotNull() {
-    try {
-      Objects.requireNonNull(dto.getGroup(), "group");
-      Objects.requireNonNull(dto.getArtifact(), "artifact");
-      Objects.requireNonNull(dto.getDatabase(), "database");
-      Objects.requireNonNull(dto.getUsername(), "username");
-      Objects.requireNonNull(dto.getPassword(), "password");
-      Objects.requireNonNull(dto.getCamundaVersion(), "camunda version");
-      Objects.requireNonNull(dto.getSpringBootVersion(), "spring boot version");
-      Objects.requireNonNull(dto.getJavaVersion(), "java version");
-      Objects.requireNonNull(dto.getVersion(), "version");
-      Objects.requireNonNull(dto.getModules(), "modules");
-    } catch (NullPointerException e) {
-      throw new BadUserRequestException(e);
-    }
   }
 
   protected List<Dependency> getDeps(Set<String> modules) {

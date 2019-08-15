@@ -35,40 +35,80 @@ public class DownloadProjectDto {
 
   public Set<String> modules;
 
+  public void setGroup(String group) {
+    this.group = group;
+  }
+
   public String getGroup() {
     return group;
+  }
+
+  public void setDatabase(String database) {
+    this.database = database;
   }
 
   public String getDatabase() {
     return database;
   }
 
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
   public String getUsername() {
     return username;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public String getPassword() {
     return password;
   }
 
+  public void setSpringBootVersion(String springBootVersion) {
+    this.springBootVersion = springBootVersion;
+  }
+
   public String getSpringBootVersion() {
     return springBootVersion;
+  }
+
+  public void setJavaVersion(String javaVersion) {
+    this.javaVersion = javaVersion;
   }
 
   public String getJavaVersion() {
     return javaVersion;
   }
 
+  public void setArtifact(String artifact) {
+    this.artifact = artifact;
+  }
+
   public String getArtifact() {
     return artifact;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
   }
 
   public String getVersion() {
     return version;
   }
 
+  public void setCamundaVersion(String camundaVersion) {
+    this.camundaVersion = camundaVersion;
+  }
+
   public String getCamundaVersion() {
     return camundaVersion;
+  }
+
+  public void setModules(Set<String> modules) {
+    this.modules = modules;
   }
 
   public Set<String> getModules() {
