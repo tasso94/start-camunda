@@ -17,6 +17,13 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
+import List from  '@material-ui/core/List';
+import ListItem from  '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import Divider from '@material-ui/core/Divider';
 
 function App() {
 
@@ -25,14 +32,23 @@ function App() {
         [username, setUsername] = useState(),
         [password, setPassword] = useState(),
         [database, setDatabase] = useState(),
-        [version, setVersion] = useState('1.0.0-SNAPSHOT'),
+        [version, setVersion] = useState(),
         [camundaVersion, setCamundaVersion] = useState(),
         [springBootVersion, setSpringBootVersion] = useState(''),
         [javaVersion, setJavaVersion] = useState(),
-        [modules, setModules] = useState(['camunda-rest']);
+        [modules, setModules] = useState({
+          'camunda-rest': true,
+          'camunda-webapps': false,
+          'spring-boot-security': false,
+          'spring-boot-web': false
+        });
 
   function generateProject() {
-    fetch('http://localhost:8080/download/' + artifact + '.zip', {
+    var moduleNames = Object.keys(modules).filter(name => {
+      return modules[name];
+    });
+
+    fetch('http://localhost:8080/download', {
       method: 'post',
       headers: {
         "Content-Type": 'application/json'
@@ -47,39 +63,57 @@ function App() {
         "camundaVersion": camundaVersion,
         "springBootVersion": springBootVersion,
         "javaVersion": javaVersion,
-        "modules": modules
+        "modules": moduleNames
       })
     }).then(response => {
       if (response.status === 200) {
-        response.blob().then(blob => require('downloadjs')(blob, artifact + '.zip'));
+
+        var filename = artifact.length < 1 ? 'my-project' : artifact;
+        response.blob().then(blob => require('downloadjs')(blob, filename + '.zip'));
       } else {
 
       }
     });
   }
 
+  const [open, setOpen] = React.useState(false);
+
+  function handleClickOpen() {
+    setOpen(true);
+  }
+
+  function handleClose() {
+    setOpen(false);
+  }
+
   function changeCamundaVersion(version) {
     switch (version) {
       case '7.8.0':
-        setSpringBootVersion("2.3.0");
+        setSpringBootVersion('1.5.8.RELEASE');
         break;
       case '7.9.0':
-        setSpringBootVersion("3.0.0");
+        setSpringBootVersion('2.0.0.RELEASE');
         break;
       case '7.10.0':
-        setSpringBootVersion("3.2.0");
+        setSpringBootVersion('2.1.x.RELEASE');
         break;
       case '7.11.0':
-        setSpringBootVersion("3.3.1");
+        setSpringBootVersion('2.1.x.RELEASE');
         break;
       case 'SNAPSHOT':
-        setSpringBootVersion("3.4.0-SNAPSHOT");
+        setSpringBootVersion('2.1.x.RELEASE');
         break;
       default:
         throw new Error("Not existing Camunda Version!");
     }
 
     setCamundaVersion(version);
+  }
+
+  function changeModules(module) {
+    modules[module.name] = module.checked;
+
+    setModules(modules);
   }
 
   const useStyles = makeStyles((theme: Theme) =>
@@ -116,23 +150,6 @@ function App() {
           Start Camunda BPM
         </Typography>
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              id="username"
-              label="Admin Username"
-              fullWidth
-              value={username}
-              onInput={e => setUsername(e.target.value)} />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              id="password"
-              label="Admin Password"
-              type="password"
-              fullWidth
-              value={password}
-              onInput={e => setPassword(e.target.value)} />
-          </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               label="Group"
@@ -198,8 +215,7 @@ function App() {
               onInput={e => setJavaVersion(e.target.value)} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl id="modules"
-                         component="fieldset">
+            <FormControl id="camunda-modules">
               <FormLabel component="legend">
                 Camunda BPM Modules
               </FormLabel>
@@ -207,22 +223,19 @@ function App() {
               <FormGroup>
                 <FormControlLabel
                   control={
-                    <Checkbox value="gilad" />
+                    <Checkbox onChange={e => changeModules({name: 'camunda-rest', checked: e.target.checked})} defaultChecked={modules['camunda-rest']} />
                   }
-                  label="REST API"
-                />
+                  label="REST API" />
                 <FormControlLabel
                   control={
-                    <Checkbox value="jason" />
+                    <Checkbox onChange={e => changeModules({name: 'camunda-webapps', checked: e.target.checked})} />
                   }
-                  label="Webapps"
-                />
+                  label="Webapps" />
               </FormGroup>
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl id="modules"
-                         component="fieldset">
+            <FormControl id="spring-boot-modules">
               <FormLabel component="legend">
                 Spring Boot Modules
               </FormLabel>
@@ -230,18 +243,33 @@ function App() {
               <FormGroup>
                 <FormControlLabel
                   control={
-                    <Checkbox value="gilad" />
+                    <Checkbox onChange={e => changeModules({name: 'spring-boot-security', checked: e.target.checked})} />
                   }
-                  label="Security"
-                />
+                  label="Security" />
                 <FormControlLabel
                   control={
-                    <Checkbox value="jason" />
+                    <Checkbox onChange={e => changeModules({name: 'spring-boot-web', checked: e.target.checked})} />
                   }
-                  label="Web"
-                />
+                  label="Web" />
               </FormGroup>
             </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="username"
+              label="Admin Username"
+              fullWidth
+              value={username}
+              onInput={e => setUsername(e.target.value)} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="password"
+              label="Admin Password"
+              type="password"
+              fullWidth
+              value={password}
+              onInput={e => setPassword(e.target.value)} />
           </Grid>
           <Grid item xs={12} sm={6}>
             <Button variant="contained" color="primary" className={classes.button} onClick={generateProject}>
@@ -249,13 +277,38 @@ function App() {
             </Button>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Button variant="contained" color="secondary" className={classes.button}>
+            <Button variant="contained" color="secondary" className={classes.button} onClick={handleClickOpen}>
               Explore Project
             </Button>
           </Grid>
         </Grid>
         </Paper>
       </Container>
+
+      <Dialog open={open} onClose={handleClose}>
+        <AppBar className={classes.appBar}>
+          <Toolbar>
+            <IconButton edge="start" color="inherit" onClick={handleClose} aria-label="close">
+              <CloseIcon />
+            </IconButton>
+            <Typography variant="h6" className={classes.title}>
+              Sound
+            </Typography>
+            <Button color="inherit" onClick={handleClose}>
+              save
+            </Button>
+          </Toolbar>
+        </AppBar>
+        <List>
+          <ListItem button>
+            <ListItemText primary="Phone ringtone" secondary="Titania" />
+          </ListItem>
+          <Divider />
+          <ListItem button>
+            <ListItemText primary="Default notification ringtone" secondary="Tethys" />
+          </ListItem>
+        </List>
+      </Dialog>
     </div>
   );
 }
