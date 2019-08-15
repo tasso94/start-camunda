@@ -1,5 +1,5 @@
 # Start Camunda BPM
 
-A web based tool to generate a Camunda Spring Boot Starter project according to your needs.
+A Webapp to generate & customize your Camunda Spring Boot Starter project.
 
 ![Start Camunda BPM](./screenshot.png)
