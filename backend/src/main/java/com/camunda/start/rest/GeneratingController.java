@@ -18,15 +18,19 @@ package com.camunda.start.rest;
 
 import com.camunda.start.processing.ProjectGenerator;
 import com.camunda.start.rest.dto.DownloadProjectDto;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class GeneratingController {
 
+  @ExceptionHandler({ BadUserRequestException.class })
   @PostMapping(value = "/download/{myProject}.zip")
   public @ResponseBody byte[] downloadProject(@RequestBody DownloadProjectDto dto) {
 
@@ -34,6 +38,7 @@ public class GeneratingController {
     return projectGenerator.generate();
   }
 
+  @ExceptionHandler({ BadUserRequestException.class })
   @PostMapping(value = "/show/{fileName}")
   public @ResponseBody String showFile(@RequestBody DownloadProjectDto dto,
                                        @PathVariable String fileName) {

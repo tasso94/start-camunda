@@ -16,6 +16,7 @@
  */
 package com.camunda.start.processing;
 
+import com.camunda.start.rest.BadUserRequestException;
 import com.camunda.start.rest.dto.DownloadProjectDto;
 import org.zeroturnaround.zip.ByteSource;
 import org.zeroturnaround.zip.ZipEntrySource;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class ProjectGenerator {
@@ -82,6 +84,8 @@ public class ProjectGenerator {
   }
 
   protected void initContext(Map<String, Object> context) {
+    ensureNotNull();
+
     context.put("packageName", dto.getGroup());
 
     context.put("dbType", dto.getDatabase());
@@ -99,6 +103,23 @@ public class ProjectGenerator {
     context.put("projectVersion", dto.getVersion());
 
     context.put("dependencies", getDeps(dto.getModules()));
+  }
+
+  protected void ensureNotNull() {
+    try {
+      Objects.requireNonNull(dto.getGroup(), "group");
+      Objects.requireNonNull(dto.getArtifact(), "artifact");
+      Objects.requireNonNull(dto.getDatabase(), "database");
+      Objects.requireNonNull(dto.getUsername(), "username");
+      Objects.requireNonNull(dto.getPassword(), "password");
+      Objects.requireNonNull(dto.getCamundaVersion(), "camunda version");
+      Objects.requireNonNull(dto.getSpringBootVersion(), "spring boot version");
+      Objects.requireNonNull(dto.getJavaVersion(), "java version");
+      Objects.requireNonNull(dto.getVersion(), "version");
+      Objects.requireNonNull(dto.getModules(), "modules");
+    } catch (NullPointerException e) {
+      throw new BadUserRequestException(e);
+    }
   }
 
   protected List<Dependency> getDeps(Set<String> modules) {
