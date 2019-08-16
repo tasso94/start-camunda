@@ -24,6 +24,8 @@ import List from  '@material-ui/core/List';
 import ListItem from  '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
+import Box from '@material-ui/core/Box';
+
 
 function App() {
 
@@ -48,7 +50,7 @@ function App() {
       return modules[name];
     });
 
-    fetch('http://localhost:8080/download', {
+    fetch('http://localhost:9090/download', {
       method: 'post',
       headers: {
         "Content-Type": 'application/json'
@@ -83,25 +85,23 @@ function App() {
   }
 
   function handleClose() {
+    setHtml();
     setOpen(false);
   }
 
   function changeCamundaVersion(version) {
     switch (version) {
-      case '7.8.0':
-        setSpringBootVersion('1.5.8.RELEASE');
-        break;
       case '7.9.0':
-        setSpringBootVersion('2.0.0.RELEASE');
+        setSpringBootVersion('2.0.9.RELEASE');
         break;
       case '7.10.0':
-        setSpringBootVersion('2.1.x.RELEASE');
+        setSpringBootVersion('2.1.6.RELEASE');
         break;
       case '7.11.0':
-        setSpringBootVersion('2.1.x.RELEASE');
+        setSpringBootVersion('2.1.6.RELEASE');
         break;
-      case 'SNAPSHOT':
-        setSpringBootVersion('2.1.x.RELEASE');
+      case '7.12.0-SNAPSHOT':
+        setSpringBootVersion('2.1.6.RELEASE');
         break;
       default:
         throw new Error("Not existing Camunda Version!");
@@ -130,27 +130,100 @@ function App() {
       },
       paper: {
         padding: theme.spacing(6, 4)
+      },
+      appBar: {
+        backgroundColor: theme.palette.secondary.main
+      },
+      list: {
+        marginTop:80
       }
     }),
   );
+
+  const [html, setHtml] = useState();
+
+  function highlight(filename, type) {
+    var moduleNames = Object.keys(modules).filter(name => {
+      return modules[name];
+    });
+
+    fetch('http://localhost:9090/show/' + filename, {
+      method: 'post',
+      headers: {
+        "Content-Type": 'application/json'
+      },
+      body: JSON.stringify({
+        "group": group,
+        "artifact": artifact,
+        "username": username,
+        "password": password,
+        "database": database,
+        "version": version,
+        "camundaVersion": camundaVersion,
+        "springBootVersion": springBootVersion,
+        "javaVersion": javaVersion,
+        "modules": moduleNames
+      })
+    }).then(response => {
+      if (response.status === 200) {
+        response.text().then(text => {
+            text = text.replace(/[<>&'"]/g, function (c) {
+              switch (c) {
+                case '<':
+                  return '&lt;';
+                case '>':
+                  return '&gt;';
+                case '&':
+                  return '&amp;';
+                case '\'':
+                  return '&apos;';
+                case '"':
+                  return '&quot;';
+              }
+            });
+          setHtml({__html: '<pre><code class="language-' + type + '">' + text + '</code></pre>'});
+        });
+      } else {
+
+      }
+    });
+  }
+
+  function highlightPom() {
+    highlight('pom.xml', 'xml');
+  }
+
+  function highlightAppYaml() {
+    highlight('application.yaml', 'yaml');
+  }
+
+  function highlightAppJava() {
+    highlight('Application.java', 'java');
+  }
 
   const classes = useStyles();
 
   return (
     <div className="App">
-      <AppBar position="static" color="default">
+      <AppBar position="static"
+              color="default">
         <Toolbar>
-          <img src="https://camunda.com/svg/logo.svg" width={160} />
+          <img src="https://camunda.com/svg/logo.svg"
+               width={160} />
         </Toolbar>
       </AppBar>
 
       <Container className={classes.root}>
         <Paper className={classes.paper}>
-        <Typography className={classes.headline} variant="h5">
+        <Typography className={classes.headline}
+                    variant="h5">
           Start Camunda BPM
         </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
+        <Grid container
+              spacing={3}>
+          <Grid item
+                xs={12}
+                sm={6}>
             <TextField
               label="Group"
               fullWidth
@@ -159,7 +232,9 @@ function App() {
               value={group}
               onInput={e => setGroup(e.target.value)} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item
+                xs={12}
+                sm={6}>
             <TextField
               id="artifact"
               label="Artifact"
@@ -172,18 +247,19 @@ function App() {
             <FormControl id="camunda-version"
                          fullWidth
                          required>
-              <InputLabel htmlFor="age-simple">Camunda BPM Version</InputLabel>
+              <InputLabel htmlFor="camunda-version">Camunda BPM Version</InputLabel>
               <Select value={camundaVersion}
                       onChange={e => changeCamundaVersion(e.target.value)}>
-                <MenuItem value="7.8.0">7.8.0</MenuItem>
                 <MenuItem value="7.9.0">7.9.0</MenuItem>
                 <MenuItem value="7.10.0">7.10.0</MenuItem>
                 <MenuItem value="7.11.0">7.11.0 (current)</MenuItem>
-                <MenuItem value="SNAPSHOT">SNAPSHOT</MenuItem>
+                <MenuItem value="7.12.0-SNAPSHOT">SNAPSHOT</MenuItem>
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item
+                xs={12}
+                sm={6}>
             <TextField
               id="spring-boot-version"
               label="Spring Boot Version"
@@ -192,11 +268,13 @@ function App() {
               value={springBootVersion}
               onInput={e => setSpringBootVersion(e.target.value)} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item
+                xs={12}
+                sm={6}>
             <FormControl fullWidth
                          required
                          id="database">
-              <InputLabel htmlFor="age-simple">Database</InputLabel>
+              <InputLabel htmlFor="database">Database</InputLabel>
               <Select value={database}
                       onChange={e => setDatabase(e.target.value)}>
                 <MenuItem value="postgresql">PostgreSQL</MenuItem>
@@ -205,7 +283,9 @@ function App() {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item
+                xs={12}
+                sm={6}>
             <TextField
               id="java-version"
               label="Java Version (8 to 12)"
@@ -214,7 +294,9 @@ function App() {
               value={javaVersion}
               onInput={e => setJavaVersion(e.target.value)} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item
+                xs={12}
+                sm={6}>
             <FormControl id="camunda-modules">
               <FormLabel component="legend">
                 Camunda BPM Modules
@@ -223,18 +305,22 @@ function App() {
               <FormGroup>
                 <FormControlLabel
                   control={
-                    <Checkbox onChange={e => changeModules({name: 'camunda-rest', checked: e.target.checked})} defaultChecked={modules['camunda-rest']} />
+                    <Checkbox onChange={e => changeModules({name: 'camunda-rest', checked: e.target.checked})}
+                              defaultChecked={modules['camunda-rest']} />
                   }
                   label="REST API" />
                 <FormControlLabel
                   control={
-                    <Checkbox onChange={e => changeModules({name: 'camunda-webapps', checked: e.target.checked})} />
+                    <Checkbox onChange={e => changeModules({name: 'camunda-webapps', checked: e.target.checked})}
+                              defaultChecked={modules['camunda-webapps']} />
                   }
                   label="Webapps" />
               </FormGroup>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item
+                xs={12}
+                sm={6}>
             <FormControl id="spring-boot-modules">
               <FormLabel component="legend">
                 Spring Boot Modules
@@ -243,18 +329,22 @@ function App() {
               <FormGroup>
                 <FormControlLabel
                   control={
-                    <Checkbox onChange={e => changeModules({name: 'spring-boot-security', checked: e.target.checked})} />
+                    <Checkbox onChange={e => changeModules({name: 'spring-boot-security', checked: e.target.checked})}
+                              defaultChecked={modules['spring-boot-security']} />
                   }
                   label="Security" />
                 <FormControlLabel
                   control={
-                    <Checkbox onChange={e => changeModules({name: 'spring-boot-web', checked: e.target.checked})} />
+                    <Checkbox onChange={e => changeModules({name: 'spring-boot-web', checked: e.target.checked})}
+                              defaultChecked={modules['spring-boot-web']} />
                   }
                   label="Web" />
               </FormGroup>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item
+                xs={12}
+                sm={6}>
             <TextField
               id="username"
               label="Admin Username"
@@ -262,7 +352,9 @@ function App() {
               value={username}
               onInput={e => setUsername(e.target.value)} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item
+                xs={12}
+                sm={6}>
             <TextField
               id="password"
               label="Admin Password"
@@ -271,13 +363,23 @@ function App() {
               value={password}
               onInput={e => setPassword(e.target.value)} />
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <Button variant="contained" color="primary" className={classes.button} onClick={generateProject}>
+          <Grid item
+                xs={12}
+                sm={6}>
+            <Button variant="contained"
+                    color="primary"
+                    className={classes.button}
+                    onClick={generateProject}>
               Generate Project
             </Button>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <Button variant="contained" color="secondary" className={classes.button} onClick={handleClickOpen}>
+          <Grid item
+                xs={12}
+                sm={6}>
+            <Button variant="contained"
+                    color="secondary"
+                    className={classes.button}
+                    onClick={handleClickOpen}>
               Explore Project
             </Button>
           </Grid>
@@ -285,29 +387,52 @@ function App() {
         </Paper>
       </Container>
 
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={open}
+              onClose={handleClose}
+              fullScreen>
         <AppBar className={classes.appBar}>
           <Toolbar>
-            <IconButton edge="start" color="inherit" onClick={handleClose} aria-label="close">
+            <IconButton edge="start"
+                        color="inherit"
+                        onClick={handleClose}
+                        aria-label="close">
               <CloseIcon />
             </IconButton>
-            <Typography variant="h6" className={classes.title}>
-              Sound
+            <Typography variant="h6"
+                        className={classes.title}>
+              Project Explorer
             </Typography>
-            <Button color="inherit" onClick={handleClose}>
-              save
-            </Button>
           </Toolbar>
         </AppBar>
-        <List>
-          <ListItem button>
-            <ListItemText primary="Phone ringtone" secondary="Titania" />
-          </ListItem>
-          <Divider />
-          <ListItem button>
-            <ListItemText primary="Default notification ringtone" secondary="Tethys" />
-          </ListItem>
-        </List>
+
+        <Grid container
+              spacing={3}>
+          <Grid item xs={12} sm={4}>
+          <List className={classes.list}>
+            <ListItem button>
+              <ListItemText onClick={highlightPom}
+                            primary="pom.xml"
+                            secondary={artifact + '/'} />
+            </ListItem>
+            <Divider />
+            <ListItem button>
+              <ListItemText onClick={highlightAppYaml}
+                            primary="application.yaml"
+                            secondary={artifact + '/src/main/resources/'} />
+            </ListItem>
+            <Divider />
+            <ListItem button>
+              <ListItemText onClick={highlightAppJava}
+                            primary="Application.java"
+                            secondary={artifact + '/artifact/src/main/java/com/example/workflow'} />
+            </ListItem>
+          </List>
+          </Grid>
+          <Grid item xs={12} sm={8}>
+            <Box className={classes.list}
+                 dangerouslySetInnerHTML={html} />
+          </Grid>
+        </Grid>
       </Dialog>
     </div>
   );

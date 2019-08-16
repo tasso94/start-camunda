@@ -16,7 +16,6 @@
  */
 package com.camunda.start.processing;
 
-import com.camunda.start.rest.BadUserRequestException;
 import com.camunda.start.rest.dto.DownloadProjectDto;
 import org.zeroturnaround.zip.ByteSource;
 import org.zeroturnaround.zip.ZipEntrySource;
@@ -26,10 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class ProjectGenerator {
 
@@ -57,7 +54,7 @@ public class ProjectGenerator {
 
   protected void initDto(DownloadProjectDto dto) {
     if (isEmpty(dto.getModules())) {
-      dto.setModules(new HashSet<>(Collections.singleton("camunda-rest")));
+      dto.setModules(Collections.singletonList("camunda-rest"));
     }
     if (isEmpty(dto.getGroup())) {
       dto.setGroup("com.example.workflow");
@@ -69,7 +66,7 @@ public class ProjectGenerator {
       dto.setArtifact("my-project");
     }
     if (isEmpty(dto.getCamundaVersion())) {
-      dto.setCamundaVersion("7.12.0");
+      dto.setCamundaVersion("7.12.0-SNAPSHOT");
     }
     if (isEmpty(dto.getJavaVersion())) {
       dto.setJavaVersion("12");
@@ -84,7 +81,7 @@ public class ProjectGenerator {
       dto.setVersion("1.0.0-SNAPSHOT");
     }
     if (isEmpty(dto.getSpringBootVersion())) {
-      dto.setSpringBootVersion("2.1.0.RELEASE");
+      dto.setSpringBootVersion("2.1.6.RELEASE");
     }
   }
 
@@ -92,7 +89,7 @@ public class ProjectGenerator {
     return string == null || string.isEmpty();
   }
 
-  private boolean isEmpty(Set<String> set) {
+  private boolean isEmpty(List<String> set) {
     return set == null || set.isEmpty();
   }
 
@@ -146,7 +143,7 @@ public class ProjectGenerator {
     context.put("dependencies", getDeps(dto.getModules()));
   }
 
-  protected List<Dependency> getDeps(Set<String> modules) {
+  protected List<Dependency> getDeps(List<String> modules) {
     List<Dependency> dependencies = new ArrayList<>();
 
     modules.forEach(module -> {
@@ -154,36 +151,34 @@ public class ProjectGenerator {
         case "camunda-webapps":
 
           Dependency camundaWebapps = new Dependency()
-              .setGroup("camunda-webapps-group")
-              .setArtifact("camunda-webapps-artifact")
-              .setVersion("camunda-webapps-version");
+              .setGroup("org.camunda.bpm.springboot")
+              .setArtifact("camunda-bpm-spring-boot-starter-webapp")
+              .setVersion(getVersion(dto.getCamundaVersion()));
 
           dependencies.add(camundaWebapps);
           break;
         case "camunda-rest":
 
           Dependency camundaRest = new Dependency()
-              .setGroup("camunda-rest-group")
-              .setArtifact("camunda-rest-artifact")
-              .setVersion("camunda-rest-version");
+              .setGroup("org.camunda.bpm.springboot")
+              .setArtifact("camunda-bpm-spring-boot-starter-rest")
+              .setVersion(getVersion(dto.getCamundaVersion()));
 
           dependencies.add(camundaRest);
           break;
         case "spring-boot-security":
 
           Dependency springSecurity = new Dependency()
-              .setGroup("spring-security-group")
-              .setArtifact("spring-security-artifact")
-              .setVersion("spring-security-version");
+              .setGroup("org.springframework.boot")
+              .setArtifact("spring-boot-starter-security");
 
           dependencies.add(springSecurity);
           break;
         case "spring-boot-web":
 
           Dependency springWeb = new Dependency()
-              .setGroup("spring-web-group")
-              .setArtifact("spring-web-artifact")
-              .setVersion("spring-web-version");
+              .setGroup("org.springframework.boot")
+              .setArtifact("spring-boot-starter-web");
 
           dependencies.add(springWeb);
           break;
@@ -192,19 +187,59 @@ public class ProjectGenerator {
       }
     });
 
+    addJdbcDependency(dto.getDatabase(), dependencies);
+
     return dependencies;
+  }
+
+  protected void addJdbcDependency(String database, List<Dependency> dependencies) {
+    Dependency jdbcDependency = null;
+
+    switch (database) {
+      case "postgresql":
+        jdbcDependency = new Dependency()
+            .setGroup("org.postgresql")
+            .setArtifact("postgresql");
+        break;
+      case "mysql":
+        jdbcDependency = new Dependency()
+            .setGroup("mysql")
+            .setArtifact("mysql-connector-java");
+        break;
+      case "h2":
+        jdbcDependency = new Dependency()
+            .setGroup("com.h2database")
+            .setArtifact("h2");
+        break;
+      default:
+        throw new RuntimeException("Unknown database!");
+    }
+
+    dependencies.add(jdbcDependency);
+  }
+
+  protected String getVersion(String camundaVersion) {
+    switch (camundaVersion) {
+      case "7.9.0":
+        return "3.0.3";
+      case "7.10.0":
+        return "3.2.5";
+      case "7.11.0":
+        return "3.3.3";
+      case "7.12.0-SNAPSHOT":
+        return "3.4.0-SNAPSHOT";
+    }
+    return null;
   }
 
   protected String getDbClassRef(String database) {
     switch (database.toLowerCase()) {
       case "postgresql":
-        return "org.postgres.bla";
-      case "h2":
-        return "org.h2.bla";
+        return "org.postgresql.jdbc2.optional.SimpleDataSource";
       case "mysql":
-        return "org.mySQl.bla";
+        return "com.mysql.cj.jdbc.MysqlDataSource";
       default:
-        throw new RuntimeException("Unknown database!");
+        return "";
     }
   }
 

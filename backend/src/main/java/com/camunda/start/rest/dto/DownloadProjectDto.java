@@ -16,7 +16,7 @@
  */
 package com.camunda.start.rest.dto;
 
-import java.util.Set;
+import java.util.List;
 
 public class DownloadProjectDto {
 
@@ -33,7 +33,7 @@ public class DownloadProjectDto {
   public String springBootVersion;
   public String javaVersion;
 
-  public Set<String> modules;
+  public List<String> modules;
 
   public void setGroup(String group) {
     this.group = group;
@@ -107,11 +107,11 @@ public class DownloadProjectDto {
     return camundaVersion;
   }
 
-  public void setModules(Set<String> modules) {
+  public void setModules(List<String> modules) {
     this.modules = modules;
   }
 
-  public Set<String> getModules() {
+  public List<String> getModules() {
     return modules;
   }
 
