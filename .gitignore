@@ -1,3 +1,4 @@
 .idea
 target/
 *.iml
+backend/src/main/resources/static/*
