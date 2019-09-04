@@ -1,0 +1,7 @@
+Dockerfile
+backend/target
+frontend/build
+frontend/node_modules
+.git
+.dockerignore
+README.md
