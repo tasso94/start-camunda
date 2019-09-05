@@ -24,4 +24,5 @@ FROM openjdk:11-jdk-slim
 COPY --from=builder /build/backend/target/start-camunda-0.0.1-SNAPSHOT.jar /
 
 CMD java -jar /start-camunda-0.0.1-SNAPSHOT.jar
+USER www-data
 EXPOSE 9090
