@@ -19,10 +19,18 @@ RUN . "$NVM_DIR/nvm.sh" && mvn clean install
 
 # ===== END BUILD STAGE ====
 
-
 FROM openjdk:11-jdk-slim
+RUN apt-get update \
+  && apt-get install -y \
+    libcap2-bin \
+  && rm -rf /var/lib/apt/lists/*
+
+# Enable non-root processes to bind to ports <1024
+RUN setcap 'cap_net_bind_service=+ep' /usr/local/openjdk-11/bin/java
+
 COPY --from=builder /build/backend/target/start-camunda-0.0.1-SNAPSHOT.jar /
 
-CMD java -jar /start-camunda-0.0.1-SNAPSHOT.jar
+CMD /usr/local/openjdk-11/bin/java -jar -Dserver.port=80 /start-camunda-0.0.1-SNAPSHOT.jar
+
 USER www-data
-EXPOSE 9090
+EXPOSE 80 
