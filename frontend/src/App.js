@@ -50,7 +50,7 @@ function App() {
       return modules[name];
     });
 
-    fetch('http://localhost:9090/download', {
+    fetch('./download', {
       method: 'post',
       headers: {
         "Content-Type": 'application/json'
@@ -147,7 +147,7 @@ function App() {
       return modules[name];
     });
 
-    fetch('http://localhost:9090/show/' + filename, {
+    fetch('./show/' + filename, {
       method: 'post',
       headers: {
         "Content-Type": 'application/json'
