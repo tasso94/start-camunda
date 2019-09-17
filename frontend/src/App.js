@@ -25,7 +25,7 @@ import ListItem from  '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
 import Box from '@material-ui/core/Box';
-
+import Link from '@material-ui/core/Link';
 
 function App() {
 
@@ -133,6 +133,12 @@ function App() {
       },
       appBar: {
         backgroundColor: theme.palette.secondary.main
+      },
+      footer: {
+        top: 'auto',
+        bottom: 0,
+        height: 40,
+        padding: 10
       },
       list: {
         marginTop:80
@@ -386,6 +392,14 @@ function App() {
         </Grid>
         </Paper>
       </Container>
+
+      <AppBar position="fixed"
+              color="default"
+              className={classes.footer}>
+        <Box fullWidth align='center'>
+          <Link href="https://camunda.com/legal/privacy/">Privacy Statement</Link> | <Link href="https://camunda.com/legal/imprint/">Imprint</Link> | Camunda Services GmbH © 2019
+        </Box>
+      </AppBar>
 
       <Dialog open={open}
               onClose={handleClose}
