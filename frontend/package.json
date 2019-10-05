@@ -12,7 +12,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "rm -rf ../backend/src/main/resources/static/* && npm i && react-scripts build && mv ./build/* ../backend/src/main/resources/static",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
