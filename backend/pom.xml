@@ -59,6 +59,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
+      <!-- ensure npm install with no-optional is called -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -67,7 +68,7 @@
         </configuration>
         <executions>
           <execution>
-            <id>npm run-script build</id>
+            <id>npm install (initialize)</id>
             <goals>
               <goal>exec</goal>
             </goals>
@@ -75,9 +76,59 @@
             <configuration>
               <executable>npm</executable>
               <arguments>
+                <argument>install</argument>
+                <argument>--no-optional</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run-script build</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <executable>npm</executable>
+              <arguments>
                 <argument>run</argument>
                 <argument>build</argument>
               </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- include generated resources in clean phase -->
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>../frontend/build</directory>
+              <includes>
+                <include>**/*</include>
+              </includes>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+      <!-- After build copy build results to backend/target -->
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/static</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>../frontend/build</directory>
+                </resource>
+              </resources>
             </configuration>
           </execution>
         </executions>
