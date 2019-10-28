@@ -17,6 +17,10 @@
 package com.camunda.start.processing;
 
 import com.camunda.start.rest.dto.DownloadProjectDto;
+import com.camunda.start.update.VersionUpdater;
+import com.camunda.start.update.dto.StarterVersionDto;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.zeroturnaround.zip.ByteSource;
 import org.zeroturnaround.zip.ZipEntrySource;
 import org.zeroturnaround.zip.ZipUtil;
@@ -25,9 +29,12 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+@Component
 public class ProjectGenerator {
 
   protected static final String MAIN_PATH = "/src/main/";
@@ -40,66 +47,26 @@ public class ProjectGenerator {
 
   protected static final String TEMPLATES_PATH = "/com/camunda/start/templates/";
 
-  protected DownloadProjectDto dto;
+
+  protected DownloadProjectDto inputData;
+  protected Map<String, Object> templateContext;
+  protected Map<String, StarterVersionDto> versions;
+
+  @Autowired
+  protected VersionUpdater versionUpdater;
+
+  @Autowired
   protected TemplateProcessor templateProcessor;
-  protected Map<String, Object> context;
 
-  public ProjectGenerator(DownloadProjectDto dto) {
-    this.dto = dto;
-    initDto(dto);
-    this.context = new HashMap<>();
-    initContext(context);
-    this.templateProcessor = new TemplateProcessor(context);
-  }
+  public byte[] generate(DownloadProjectDto inputData) {
+    initialize(inputData);
 
-  protected void initDto(DownloadProjectDto dto) {
-    if (isEmpty(dto.getModules())) {
-      dto.setModules(Collections.singletonList("camunda-rest"));
-    }
-    if (isEmpty(dto.getGroup())) {
-      dto.setGroup("com.example.workflow");
-    }
-    if (isEmpty(dto.getDatabase())) {
-      dto.setDatabase("postgresql");
-    }
-    if (isEmpty(dto.getArtifact())) {
-      dto.setArtifact("my-project");
-    }
-    if (isEmpty(dto.getCamundaVersion())) {
-      dto.setCamundaVersion("7.12.0-SNAPSHOT");
-    }
-    if (isEmpty(dto.getJavaVersion())) {
-      dto.setJavaVersion("12");
-    }
-    if (isEmpty(dto.getUsername())) {
-      dto.setUsername("demo");
-    }
-    if (isEmpty(dto.getPassword())) {
-      dto.setPassword("demo");
-    }
-    if (isEmpty(dto.getVersion())) {
-      dto.setVersion("1.0.0-SNAPSHOT");
-    }
-    if (isEmpty(dto.getSpringBootVersion())) {
-      dto.setSpringBootVersion("2.1.6.RELEASE");
-    }
-  }
-
-  private boolean isEmpty(String string) {
-    return string == null || string.isEmpty();
-  }
-
-  private boolean isEmpty(List<String> set) {
-    return set == null || set.isEmpty();
-  }
-
-  public byte[] generate() {
     byte[] applicationClass = processByFileName(APPLICATION_CLASS_NAME);
     byte[] applicationYaml = processByFileName(APPLICATION_YAML_NAME);
     byte[] pomXml = processByFileName(APPLICATION_POM_NAME);
 
-    String projectName = (String) context.get("artifact");
-    String packageName = dotToSlash(dto.getGroup());
+    String projectName = (String) templateContext.get("artifact");
+    String packageName = dotToSlash((String) templateContext.get("group"));
 
     ZipEntrySource[] entries = new ZipEntrySource[] {
         new ByteSource(projectName + JAVA_PATH + packageName + "/" + APPLICATION_CLASS_NAME, applicationClass),
@@ -114,33 +81,104 @@ public class ProjectGenerator {
     return baos.toByteArray();
   }
 
-  public String generate(String fileName) {
-    return templateProcessor.process(TEMPLATES_PATH + fileName + ".vm");
+  public String generate(DownloadProjectDto inputData, String fileName) {
+    initialize(inputData);
+
+    return templateProcessor.process(templateContext, TEMPLATES_PATH + fileName + ".vm");
   }
 
   protected byte[] processByFileName(String filename) {
-    return templateProcessor.process(TEMPLATES_PATH + filename + ".vm")
+    return templateProcessor.process(templateContext,TEMPLATES_PATH + filename + ".vm")
         .getBytes();
   }
 
-  protected void initContext(Map<String, Object> context) {
-    context.put("packageName", dto.getGroup());
+  public void initialize(DownloadProjectDto inputData) {
+    this.inputData = inputData;
 
-    context.put("dbType", dto.getDatabase());
-    context.put("dbClassRef", getDbClassRef(dto.getDatabase()));
+    versions = versionUpdater.getStarterVersionWrapper()
+        .getStarterVersions()
+        .stream()
+        .collect(Collectors.toMap(StarterVersionDto::getStarterVersion,
+            starterVersionDto -> starterVersionDto, (a, b) -> b, LinkedHashMap::new));
 
-    context.put("adminUsername", dto.getUsername());
-    context.put("adminPassword", dto.getPassword());
+    addDefaultValues(inputData);
 
-    context.put("camundaVersion", dto.getCamundaVersion());
-    context.put("springBootVersion", dto.getSpringBootVersion());
-    context.put("javaVersion", dto.getJavaVersion());
+    templateContext = initTemplateContext(inputData);
+  }
 
-    context.put("group", dto.getGroup());
-    context.put("artifact", dto.getArtifact());
-    context.put("projectVersion", dto.getVersion());
+  protected void addDefaultValues(DownloadProjectDto inputData) {
+    if (isEmpty(inputData.getModules())) {
+      inputData.setModules(Collections.singletonList("camunda-rest"));
+    }
+    if (isEmpty(inputData.getGroup())) {
+      inputData.setGroup("com.example.workflow");
+    }
+    if (isEmpty(inputData.getDatabase())) {
+      inputData.setDatabase("h2");
+    }
+    if (isEmpty(inputData.getArtifact())) {
+      inputData.setArtifact("my-project");
+    }
+    if (isEmpty(inputData.getStarterVersion())) {
+      String latestStarterVersion = versions.keySet()
+          .iterator()
+          .next();
 
-    context.put("dependencies", getDeps(dto.getModules()));
+      inputData.setStarterVersion(latestStarterVersion);
+    }
+    if (isEmpty(inputData.getJavaVersion())) {
+      inputData.setJavaVersion("12");
+    }
+    if (isEmpty(inputData.getUsername())) {
+      inputData.setUsername("demo");
+    }
+    if (isEmpty(inputData.getPassword())) {
+      inputData.setPassword("demo");
+    }
+    if (isEmpty(inputData.getVersion())) {
+      inputData.setVersion("1.0.0-SNAPSHOT");
+    }
+  }
+
+  private boolean isEmpty(String string) {
+    return string == null || string.isEmpty();
+  }
+
+  private boolean isEmpty(List<String> set) {
+    return set == null || set.isEmpty();
+  }
+
+  protected Map<String, Object> initTemplateContext(DownloadProjectDto inputData) {
+    Map<String, Object> context = new HashMap<>();
+    context.put("packageName", inputData.getGroup());
+
+    context.put("dbType", inputData.getDatabase());
+    context.put("dbClassRef", getDbClassRef(inputData.getDatabase()));
+
+    context.put("adminUsername", inputData.getUsername());
+    context.put("adminPassword", inputData.getPassword());
+
+    context.put("camundaVersion", resolveCamundaVersion(inputData.getStarterVersion()));
+    context.put("springBootVersion", resolveSpringBootVersion(inputData.getStarterVersion()));
+    context.put("javaVersion", inputData.getJavaVersion());
+
+    context.put("group", inputData.getGroup());
+    context.put("artifact", inputData.getArtifact());
+    context.put("projectVersion", inputData.getVersion());
+
+    context.put("dependencies", getDeps(inputData.getModules()));
+
+    return context;
+  }
+
+  protected String resolveSpringBootVersion(String starterVersion) {
+    return versions.get(starterVersion)
+        .getSpringBootVersion();
+  }
+
+  protected String resolveCamundaVersion(String starterVersion) {
+    return versions.get(starterVersion)
+        .getCamundaVersion();
   }
 
   protected List<Dependency> getDeps(List<String> modules) {
@@ -153,7 +191,7 @@ public class ProjectGenerator {
           Dependency camundaWebapps = new Dependency()
               .setGroup("org.camunda.bpm.springboot")
               .setArtifact("camunda-bpm-spring-boot-starter-webapp")
-              .setVersion(getVersion(dto.getCamundaVersion()));
+              .setVersion(inputData.getStarterVersion());
 
           dependencies.add(camundaWebapps);
           break;
@@ -162,7 +200,7 @@ public class ProjectGenerator {
           Dependency camundaRest = new Dependency()
               .setGroup("org.camunda.bpm.springboot")
               .setArtifact("camunda-bpm-spring-boot-starter-rest")
-              .setVersion(getVersion(dto.getCamundaVersion()));
+              .setVersion(inputData.getStarterVersion());
 
           dependencies.add(camundaRest);
           break;
@@ -187,7 +225,7 @@ public class ProjectGenerator {
       }
     });
 
-    addJdbcDependency(dto.getDatabase(), dependencies);
+    addJdbcDependency(inputData.getDatabase(), dependencies);
 
     return dependencies;
   }
@@ -216,20 +254,6 @@ public class ProjectGenerator {
     }
 
     dependencies.add(jdbcDependency);
-  }
-
-  protected String getVersion(String camundaVersion) {
-    switch (camundaVersion) {
-      case "7.9.0":
-        return "3.0.3";
-      case "7.10.0":
-        return "3.2.5";
-      case "7.11.0":
-        return "3.3.3";
-      case "7.12.0-SNAPSHOT":
-        return "3.4.0-SNAPSHOT";
-    }
-    return null;
   }
 
   protected String getDbClassRef(String database) {

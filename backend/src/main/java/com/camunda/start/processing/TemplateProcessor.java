@@ -21,19 +21,15 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.springframework.stereotype.Component;
 
 import java.io.StringWriter;
 import java.util.Map;
 
+@Component
 public class TemplateProcessor {
 
-  protected Map<String, Object> context;
-
-  public TemplateProcessor(Map<String, Object> context) {
-    this.context = context;
-  }
-
-  public String process(String templateName) {
+  public String process(Map<String, Object> context, String templateName) {
 
     VelocityEngine ve = new VelocityEngine();
     ve.setProperty(RuntimeConstants.RESOURCE_LOADERS, "classpath");

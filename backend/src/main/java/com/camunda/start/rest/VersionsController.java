@@ -16,35 +16,22 @@
  */
 package com.camunda.start.rest;
 
-import com.camunda.start.processing.ProjectGenerator;
-import com.camunda.start.rest.dto.DownloadProjectDto;
+import com.camunda.start.update.VersionUpdater;
+import com.camunda.start.update.dto.StarterVersionWrapperDto;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class GeneratingController {
+public class VersionsController {
 
   @Autowired
-  protected ProjectGenerator projectGenerator;
+  protected VersionUpdater versionUpdater;
 
-  @ExceptionHandler({ BadUserRequestException.class })
-  @PostMapping(value = "/download")
-  public @ResponseBody byte[] downloadProject(@RequestBody DownloadProjectDto inputData) {
-
-    return projectGenerator.generate(inputData);
-  }
-
-  @ExceptionHandler({ BadUserRequestException.class })
-  @PostMapping(value = "/show/{fileName}")
-  public @ResponseBody String showFile(@RequestBody DownloadProjectDto inputData,
-                                       @PathVariable String fileName) {
-
-    return projectGenerator.generate(inputData, fileName);
+  @GetMapping(value = "/versions.json")
+  public @ResponseBody StarterVersionWrapperDto getVersions() {
+    return versionUpdater.getStarterVersionWrapper();
   }
 
 }

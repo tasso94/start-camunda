@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Theme, createStyles, makeStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Container from '@material-ui/core/Container';
@@ -34,8 +34,7 @@ function App() {
         [username, setUsername] = useState(),
         [password, setPassword] = useState(),
         [database, setDatabase] = useState(),
-        [version, setVersion] = useState(),
-        [camundaVersion, setCamundaVersion] = useState(),
+        [starterVersion, setStarterVersion] = useState(),
         [springBootVersion, setSpringBootVersion] = useState(''),
         [javaVersion, setJavaVersion] = useState(),
         [modules, setModules] = useState({
@@ -43,7 +42,8 @@ function App() {
           'camunda-webapps': false,
           'spring-boot-security': false,
           'spring-boot-web': false
-        });
+        }),
+        [starterVersions, setStarterVersions] = useState([]);
 
   function generateProject() {
     var moduleNames = Object.keys(modules).filter(name => {
@@ -61,9 +61,7 @@ function App() {
         "username": username,
         "password": password,
         "database": database,
-        "version": version,
-        "camundaVersion": camundaVersion,
-        "springBootVersion": springBootVersion,
+        "starterVersion": starterVersion,
         "javaVersion": javaVersion,
         "modules": moduleNames
       })
@@ -89,25 +87,23 @@ function App() {
     setOpen(false);
   }
 
-  function changeCamundaVersion(version) {
-    switch (version) {
-      case '7.9.0':
-        setSpringBootVersion('2.0.9.RELEASE');
-        break;
-      case '7.10.0':
-        setSpringBootVersion('2.1.6.RELEASE');
-        break;
-      case '7.11.0':
-        setSpringBootVersion('2.1.6.RELEASE');
-        break;
-      case '7.12.0-SNAPSHOT':
-        setSpringBootVersion('2.1.6.RELEASE');
-        break;
-      default:
-        throw new Error("Not existing Camunda Version!");
-    }
+  function changeStarterVersion(version) {
+    setStarterVersion(version);
+    starterVersions.forEach(versions => {
+      if (versions.starterVersion === version) {
+        setSpringBootVersion(versions.springBootVersion);
+      }
+    });
+  }
 
-    setCamundaVersion(version);
+  function fetchStarterVersions() {
+    fetch('./versions.json').then(response => {
+      if (response.status === 200) {
+        response.json().then(json => {
+          setStarterVersions(json.starterVersions);
+        });
+      }
+    });
   }
 
   function changeModules(module) {
@@ -164,9 +160,7 @@ function App() {
         "username": username,
         "password": password,
         "database": database,
-        "version": version,
-        "camundaVersion": camundaVersion,
-        "springBootVersion": springBootVersion,
+        "starterVersion": starterVersion,
         "javaVersion": javaVersion,
         "modules": moduleNames
       })
@@ -209,6 +203,10 @@ function App() {
 
   const classes = useStyles();
 
+  useEffect(() => {
+    fetchStarterVersions();
+  }, []);
+
   return (
     <div className="App">
       <AppBar position="static"
@@ -225,6 +223,12 @@ function App() {
                     variant="h5">
           Start Camunda BPM
         </Typography>
+        {starterVersions.length === 0 &&
+          <Typography>
+            Loading...
+          </Typography>
+        }
+        {starterVersions.length > 0 &&
         <Grid container
               spacing={3}>
           <Grid item
@@ -254,12 +258,11 @@ function App() {
                          fullWidth
                          required>
               <InputLabel htmlFor="camunda-version">Camunda BPM Version</InputLabel>
-              <Select value={camundaVersion}
-                      onChange={e => changeCamundaVersion(e.target.value)}>
-                <MenuItem value="7.9.0">7.9.0</MenuItem>
-                <MenuItem value="7.10.0">7.10.0</MenuItem>
-                <MenuItem value="7.11.0">7.11.0 (current)</MenuItem>
-                <MenuItem value="7.12.0-SNAPSHOT">SNAPSHOT</MenuItem>
+              <Select value={starterVersion}
+                      onChange={e => changeStarterVersion(e.target.value)}>
+                {starterVersions.map(versions => {
+                   return <MenuItem value={versions.starterVersion}>{versions.camundaVersion}</MenuItem>;
+                })}
               </Select>
             </FormControl>
           </Grid>
@@ -271,8 +274,7 @@ function App() {
               label="Spring Boot Version"
               fullWidth
               disabled
-              value={springBootVersion}
-              onInput={e => setSpringBootVersion(e.target.value)} />
+              value={springBootVersion} />
           </Grid>
           <Grid item
                 xs={12}
@@ -390,6 +392,7 @@ function App() {
             </Button>
           </Grid>
         </Grid>
+        }
         </Paper>
       </Container>
 

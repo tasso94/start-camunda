@@ -29,8 +29,7 @@ public class DownloadProjectDto {
   public String artifact;
   public String version;
 
-  public String camundaVersion;
-  public String springBootVersion;
+  public String starterVersion;
   public String javaVersion;
 
   public List<String> modules;
@@ -67,14 +66,6 @@ public class DownloadProjectDto {
     return password;
   }
 
-  public void setSpringBootVersion(String springBootVersion) {
-    this.springBootVersion = springBootVersion;
-  }
-
-  public String getSpringBootVersion() {
-    return springBootVersion;
-  }
-
   public void setJavaVersion(String javaVersion) {
     this.javaVersion = javaVersion;
   }
@@ -99,20 +90,20 @@ public class DownloadProjectDto {
     return version;
   }
 
-  public void setCamundaVersion(String camundaVersion) {
-    this.camundaVersion = camundaVersion;
-  }
-
-  public String getCamundaVersion() {
-    return camundaVersion;
-  }
-
   public void setModules(List<String> modules) {
     this.modules = modules;
   }
 
   public List<String> getModules() {
     return modules;
+  }
+
+  public void setStarterVersion(String starterVersion) {
+    this.starterVersion = starterVersion;
+  }
+
+  public String getStarterVersion() {
+    return starterVersion;
   }
 
 }
