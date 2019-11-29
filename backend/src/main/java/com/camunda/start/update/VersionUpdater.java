@@ -47,8 +47,6 @@ import static com.camunda.start.update.Constants.XPATH_VERSIONS;
 @Component
 public class VersionUpdater {
 
-    protected final Logger LOGGER = LoggerFactory.getLogger(VersionUpdater.class);
-
     protected Map<String, ComparableVersion> cachedComparableVersions = new HashMap<>();
 
     protected StarterVersionWrapperDto starterVersionWrapper;
@@ -118,7 +116,7 @@ public class VersionUpdater {
         
         for (int i = 0; i < 3; i++) {
             String version = majorMinorVersions.get(i)
-                .getCanonical();
+                .toString();
 
             String url = URL_MAVEN_PROJECT_POM.replace("{version}", version);
 
