@@ -33,13 +33,13 @@ function App() {
         [group, setGroup] = useState('com.example.workflow'),
         [username, setUsername] = useState(),
         [password, setPassword] = useState(),
-        [database, setDatabase] = useState(),
-        [starterVersion, setStarterVersion] = useState(),
+        [database, setDatabase] = useState('h2'),
+        [starterVersion, setStarterVersion] = useState(''),
         [springBootVersion, setSpringBootVersion] = useState(''),
-        [javaVersion, setJavaVersion] = useState(),
+        [javaVersion, setJavaVersion] = useState('8'),
         [modules, setModules] = useState({
           'camunda-rest': true,
-          'camunda-webapps': false,
+          'camunda-webapps': true,
           'spring-boot-security': false,
           'spring-boot-web': false
         }),
@@ -87,9 +87,9 @@ function App() {
     setOpen(false);
   }
 
-  function changeStarterVersion(version) {
+  function changeStarterVersion(version, versions) {
     setStarterVersion(version);
-    starterVersions.forEach(versions => {
+    versions.forEach(versions => {
       if (versions.starterVersion === version) {
         setSpringBootVersion(versions.springBootVersion);
       }
@@ -101,6 +101,8 @@ function App() {
       if (response.status === 200) {
         response.json().then(json => {
           setStarterVersions(json.starterVersions);
+          var latestVersion = json.starterVersions[0].starterVersion;
+          changeStarterVersion(latestVersion, json.starterVersions);
         });
       }
     });
@@ -259,7 +261,7 @@ function App() {
                          required>
               <InputLabel htmlFor="camunda-version">Camunda BPM Version</InputLabel>
               <Select value={starterVersion}
-                      onChange={e => changeStarterVersion(e.target.value)}>
+                      onChange={e => changeStarterVersion(e.target.value, starterVersions)}>
                 {starterVersions.map(versions => {
                    return <MenuItem value={versions.starterVersion}>{versions.camundaVersion}</MenuItem>;
                 })}
@@ -296,9 +298,10 @@ function App() {
                 sm={6}>
             <TextField
               id="java-version"
-              label="Java Version (8 to 12)"
+              label="Java Version"
               fullWidth
               required
+              type="number"
               value={javaVersion}
               onInput={e => setJavaVersion(e.target.value)} />
           </Grid>
