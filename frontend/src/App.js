@@ -26,6 +26,8 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
 import Box from '@material-ui/core/Box';
 import Link from '@material-ui/core/Link';
+import BookOutlined from '@material-ui/icons/BookOutlined';
+import Tooltip from '@material-ui/core/Tooltip';
 
 function App() {
 
@@ -36,6 +38,7 @@ function App() {
         [database, setDatabase] = useState('h2'),
         [starterVersion, setStarterVersion] = useState(''),
         [springBootVersion, setSpringBootVersion] = useState(''),
+        [camundaVersion, setCamundaVersion] = useState(''),
         [javaVersion, setJavaVersion] = useState('8'),
         [modules, setModules] = useState({
           'camunda-rest': true,
@@ -92,6 +95,7 @@ function App() {
     versions.forEach(versions => {
       if (versions.starterVersion === version) {
         setSpringBootVersion(versions.springBootVersion);
+        setCamundaVersion(versions.camundaVersion);
       }
     });
   }
@@ -106,6 +110,11 @@ function App() {
         });
       }
     });
+  }
+
+  function getMajorMinor(version) {
+    var versionTokens = version.split('.');
+    return versionTokens[0] + '.' + versionTokens[1];
   }
 
   function changeModules(module) {
@@ -140,6 +149,10 @@ function App() {
       },
       list: {
         marginTop:80
+      },
+      docs: {
+        marginLeft:15,
+        verticalAlign:'text-top'
       }
     }),
   );
@@ -319,13 +332,33 @@ function App() {
                     <Checkbox onChange={e => changeModules({name: 'camunda-rest', checked: e.target.checked})}
                               defaultChecked={modules['camunda-rest']} />
                   }
-                  label="REST API" />
+                  label={
+                    <>
+                      REST API
+                      <Link href={'https://docs.camunda.org/manual/' + getMajorMinor(camundaVersion) + '/reference/rest/'}>
+                        <Tooltip title="Go to Docs" placement="top">
+                          <BookOutlined fontSize="small"
+                                        className={classes.docs} />
+                        </Tooltip>
+                      </Link>
+                    </>
+                  } />
                 <FormControlLabel
                   control={
                     <Checkbox onChange={e => changeModules({name: 'camunda-webapps', checked: e.target.checked})}
                               defaultChecked={modules['camunda-webapps']} />
                   }
-                  label="Webapps" />
+                  label={
+                    <>
+                      Webapps
+                      <Link href={'https://docs.camunda.org/manual/' + getMajorMinor(camundaVersion) + '/webapps/cockpit/'}>
+                        <Tooltip title="Go to Docs" placement="top">
+                          <BookOutlined fontSize="small"
+                                        className={classes.docs} />
+                        </Tooltip>
+                      </Link>
+                    </>
+                  } />
               </FormGroup>
             </FormControl>
           </Grid>
