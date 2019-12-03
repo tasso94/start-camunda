@@ -73,6 +73,7 @@
               <arguments>
                 <argument>install</argument>
                 <argument>--no-optional</argument>
+                <argument>--max-old-space-size=250</argument>
               </arguments>
             </configuration>
           </execution>
@@ -87,6 +88,7 @@
               <arguments>
                 <argument>run</argument>
                 <argument>build</argument>
+                <argument>--max-old-space-size=250</argument>
               </arguments>
             </configuration>
           </execution>
