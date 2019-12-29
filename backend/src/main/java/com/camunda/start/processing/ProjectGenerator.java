@@ -116,8 +116,8 @@ public class ProjectGenerator {
     if (isEmpty(inputData.getGroup())) {
       inputData.setGroup("com.example.workflow");
     }
-    if (isEmpty(inputData.getDatabase())) {
-      inputData.setDatabase("h2");
+    if (isEmpty(inputData.getPersistence())) {
+      inputData.setPersistence("on-disk");
     }
     if (isEmpty(inputData.getArtifact())) {
       inputData.setArtifact("my-project");
@@ -155,8 +155,7 @@ public class ProjectGenerator {
     Map<String, Object> context = new HashMap<>();
     context.put("packageName", inputData.getGroup());
 
-    context.put("dbType", inputData.getDatabase());
-    context.put("dbClassRef", getDbClassRef(inputData.getDatabase()));
+    context.put("persistence", inputData.getPersistence());
 
     context.put("adminUsername", inputData.getUsername());
     context.put("adminPassword", inputData.getPassword());
@@ -169,7 +168,7 @@ public class ProjectGenerator {
     context.put("artifact", inputData.getArtifact());
     context.put("projectVersion", inputData.getVersion());
 
-    context.put("dependencies", getDeps(inputData.getModules()));
+    context.put("dependencies", getDeps(inputData.getModules(), inputData.getPersistence()));
 
     return context;
   }
@@ -184,7 +183,7 @@ public class ProjectGenerator {
         .getCamundaVersion();
   }
 
-  protected List<Dependency> getDeps(List<String> modules) {
+  protected List<Dependency> getDeps(List<String> modules, String persistence) {
     List<Dependency> dependencies = new ArrayList<>();
 
     modules.forEach(module -> {
@@ -228,46 +227,17 @@ public class ProjectGenerator {
       }
     });
 
-    addJdbcDependency(inputData.getDatabase(), dependencies);
+    dependencies.add(new Dependency()
+        .setArtifact("h2")
+        .setGroup("com.h2database"));
+
+    if ("on-disk".equals(persistence)) {
+      dependencies.add(new Dependency()
+          .setArtifact("spring-boot-starter-data-jpa")
+          .setGroup("org.springframework.boot"));
+    } // else: in-memory
 
     return dependencies;
-  }
-
-  protected void addJdbcDependency(String database, List<Dependency> dependencies) {
-    Dependency jdbcDependency = null;
-
-    switch (database) {
-      case "postgresql":
-        jdbcDependency = new Dependency()
-            .setGroup("org.postgresql")
-            .setArtifact("postgresql");
-        break;
-      case "mysql":
-        jdbcDependency = new Dependency()
-            .setGroup("mysql")
-            .setArtifact("mysql-connector-java");
-        break;
-      case "h2":
-        jdbcDependency = new Dependency()
-            .setGroup("com.h2database")
-            .setArtifact("h2");
-        break;
-      default:
-        throw new RuntimeException("Unknown database!");
-    }
-
-    dependencies.add(jdbcDependency);
-  }
-
-  protected String getDbClassRef(String database) {
-    switch (database.toLowerCase()) {
-      case "postgresql":
-        return "org.postgresql.jdbc2.optional.SimpleDataSource";
-      case "mysql":
-        return "com.mysql.cj.jdbc.MysqlDataSource";
-      default:
-        return "";
-    }
   }
 
   protected String dotToSlash(String input) {

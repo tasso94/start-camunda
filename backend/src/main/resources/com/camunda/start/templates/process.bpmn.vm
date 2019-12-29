@@ -9,7 +9,7 @@
       <bpmn:incoming>SequenceFlow_16gzt2m</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="SequenceFlow_16gzt2m" sourceRef="say-hello" targetRef="EndEvent_0x6ir2l" />
-    <bpmn:userTask id="say-hello" name="Say hello to &#10;$adminUsername">
+    <bpmn:userTask id="say-hello" name="Say hello to&#10;$adminUsername">
       <bpmn:incoming>SequenceFlow_1fp17al</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_16gzt2m</bpmn:outgoing>
     </bpmn:userTask>

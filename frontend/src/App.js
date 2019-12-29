@@ -35,7 +35,7 @@ function App() {
         [group, setGroup] = useState('com.example.workflow'),
         [username, setUsername] = useState(),
         [password, setPassword] = useState(),
-        [database, setDatabase] = useState('h2'),
+        [persistence, setPersistence] = useState('on-disk'),
         [starterVersion, setStarterVersion] = useState(''),
         [springBootVersion, setSpringBootVersion] = useState(''),
         [camundaVersion, setCamundaVersion] = useState(''),
@@ -63,7 +63,7 @@ function App() {
         "artifact": artifact,
         "username": username,
         "password": password,
-        "database": database,
+        "persistence": persistence,
         "starterVersion": starterVersion,
         "javaVersion": javaVersion,
         "modules": moduleNames
@@ -174,7 +174,7 @@ function App() {
         "artifact": artifact,
         "username": username,
         "password": password,
-        "database": database,
+        "persistence": persistence,
         "starterVersion": starterVersion,
         "javaVersion": javaVersion,
         "modules": moduleNames
@@ -304,13 +304,12 @@ function App() {
                 sm={6}>
             <FormControl fullWidth
                          required
-                         id="database">
-              <InputLabel htmlFor="database">Database</InputLabel>
-              <Select value={database}
-                      onChange={e => setDatabase(e.target.value)}>
-                <MenuItem value="postgresql">PostgreSQL</MenuItem>
-                <MenuItem value="mysql">MySQL</MenuItem>
-                <MenuItem value="h2">H2</MenuItem>
+                         id="persistence">
+              <InputLabel htmlFor="persistence">Persistence</InputLabel>
+              <Select value={persistence}
+                      onChange={e => setPersistence(e.target.value)}>
+                <MenuItem value="on-disk">On-Disk</MenuItem>
+                <MenuItem value="in-memory">In-Memory</MenuItem>
               </Select>
             </FormControl>
           </Grid>

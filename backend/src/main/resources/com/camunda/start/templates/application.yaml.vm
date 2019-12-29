@@ -1,9 +1,5 @@
-#if($dbType != "h2")
-spring.datasource: # Please adjust username, password, hostname, port and database name
-  type: $dbClassRef
-  username: username
-  password: password
-  url: jdbc:$dbType://hostname:port/dbName
+#if($persistence == "on-disk")
+spring.datasource.url: jdbc:h2:file:./camunda-h2-database
 
 #end
 camunda.bpm.admin-user:

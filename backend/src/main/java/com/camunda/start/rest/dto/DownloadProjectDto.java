@@ -23,7 +23,7 @@ public class DownloadProjectDto {
   public String username;
   public String password;
 
-  public String database;
+  public String persistence;
 
   public String group;
   public String artifact;
@@ -42,12 +42,12 @@ public class DownloadProjectDto {
     return group;
   }
 
-  public void setDatabase(String database) {
-    this.database = database;
+  public void setPersistence(String persistence) {
+    this.persistence = persistence;
   }
 
-  public String getDatabase() {
-    return database;
+  public String getPersistence() {
+    return persistence;
   }
 
   public void setUsername(String username) {
