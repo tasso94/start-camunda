@@ -260,7 +260,6 @@ function App() {
             <TextField
               label="Group"
               fullWidth
-              required
               id="group"
               value={group}
               onInput={e => setGroup(e.target.value)} />
@@ -272,14 +271,12 @@ function App() {
               id="artifact"
               label="Artifact"
               fullWidth
-              required
               value={artifact}
               onInput={e => setArtifact(e.target.value)} />
           </Grid>
           <Grid item xs={12} sm={6}>
             <FormControl id="camunda-version"
-                         fullWidth
-                         required>
+                         fullWidth>
               <InputLabel htmlFor="camunda-version">Camunda BPM Version</InputLabel>
               <Select value={starterVersion}
                       onChange={e => changeStarterVersion(e.target.value, starterVersions)}>
@@ -303,7 +300,6 @@ function App() {
                 xs={12}
                 sm={6}>
             <FormControl fullWidth
-                         required
                          id="persistence">
               <InputLabel htmlFor="persistence">Persistence</InputLabel>
               <Select value={persistence}
@@ -320,7 +316,6 @@ function App() {
               id="java-version"
               label="Java Version"
               fullWidth
-              required
               type="number"
               value={javaVersion}
               onInput={e => setJavaVersion(e.target.value)} />
