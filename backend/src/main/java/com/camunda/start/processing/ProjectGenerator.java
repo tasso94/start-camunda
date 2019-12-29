@@ -44,6 +44,7 @@ public class ProjectGenerator {
   protected static final String APPLICATION_CLASS_NAME = "Application.java";
   protected static final String APPLICATION_YAML_NAME = "application.yaml";
   protected static final String APPLICATION_POM_NAME = "pom.xml";
+  protected static final String APPLICATION_BPMN_NAME = "process.bpmn";
 
   protected static final String TEMPLATES_PATH = "/com/camunda/start/templates/";
 
@@ -64,6 +65,7 @@ public class ProjectGenerator {
     byte[] applicationClass = processByFileName(APPLICATION_CLASS_NAME);
     byte[] applicationYaml = processByFileName(APPLICATION_YAML_NAME);
     byte[] pomXml = processByFileName(APPLICATION_POM_NAME);
+    byte[] processBpmn = processByFileName(APPLICATION_BPMN_NAME);
 
     String projectName = (String) templateContext.get("artifact");
     String packageName = dotToSlash((String) templateContext.get("group"));
@@ -71,7 +73,8 @@ public class ProjectGenerator {
     ZipEntrySource[] entries = new ZipEntrySource[] {
         new ByteSource(projectName + JAVA_PATH + packageName + "/" + APPLICATION_CLASS_NAME, applicationClass),
         new ByteSource(projectName + RESOURCES_PATH + APPLICATION_YAML_NAME, applicationYaml),
-        new ByteSource(projectName + "/" + APPLICATION_POM_NAME, pomXml)
+        new ByteSource(projectName + "/" + APPLICATION_POM_NAME, pomXml),
+        new ByteSource(projectName + RESOURCES_PATH + APPLICATION_BPMN_NAME, processBpmn)
     };
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();

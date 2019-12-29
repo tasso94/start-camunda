@@ -216,10 +216,18 @@ function App() {
     highlight('Application.java', 'java');
   }
 
+  function highlightProcess() {
+    highlight('process.bpmn', 'xml');
+  }
+
   const classes = useStyles();
 
   useEffect(() => {
     fetchStarterVersions();
+    window.addEventListener('beforeunload', function(e) {
+      e.preventDefault();
+      e.returnValue = true;
+    });
   }, []);
 
   return (
@@ -335,10 +343,11 @@ function App() {
                   label={
                     <>
                       REST API
-                      <Link href={'https://docs.camunda.org/manual/' + getMajorMinor(camundaVersion) + '/reference/rest/'}>
+                      <Link className={classes.docs}
+                            target="_blank"
+                            href={'https://docs.camunda.org/manual/' + getMajorMinor(camundaVersion) + '/reference/rest/'}>
                         <Tooltip title="Go to Docs" placement="top">
-                          <BookOutlined fontSize="small"
-                                        className={classes.docs} />
+                          <BookOutlined fontSize="small" />
                         </Tooltip>
                       </Link>
                     </>
@@ -351,10 +360,11 @@ function App() {
                   label={
                     <>
                       Webapps
-                      <Link href={'https://docs.camunda.org/manual/' + getMajorMinor(camundaVersion) + '/webapps/cockpit/'}>
+                      <Link className={classes.docs}
+                            target="_blank"
+                            href={'https://docs.camunda.org/manual/' + getMajorMinor(camundaVersion) + '/webapps/cockpit/'}>
                         <Tooltip title="Go to Docs" placement="top">
-                          <BookOutlined fontSize="small"
-                                        className={classes.docs} />
+                          <BookOutlined fontSize="small" />
                         </Tooltip>
                       </Link>
                     </>
@@ -436,7 +446,7 @@ function App() {
               color="default"
               className={classes.footer}>
         <Box fullWidth align='center'>
-          <Link href="https://camunda.com/legal/privacy/">Privacy Statement</Link> | <Link href="https://camunda.com/legal/imprint/">Imprint</Link> | Camunda Services GmbH © 2019
+          <Link href="https://camunda.com/legal/privacy/">Privacy Statement</Link> | <Link href="https://camunda.com/legal/imprint/">Imprint</Link> | Camunda Services GmbH © 2019 - {new Date().getFullYear()}
         </Box>
       </AppBar>
 
@@ -475,9 +485,15 @@ function App() {
             </ListItem>
             <Divider />
             <ListItem button>
+              <ListItemText onClick={highlightProcess}
+                            primary="process.bpmn"
+                            secondary={artifact + '/src/main/resources/'} />
+            </ListItem>
+            <Divider />
+            <ListItem button>
               <ListItemText onClick={highlightAppJava}
                             primary="Application.java"
-                            secondary={artifact + '/artifact/src/main/java/com/example/workflow'} />
+                            secondary={artifact + '/src/main/java/' + group.replace(/\./g,'/') + '/'} />
             </ListItem>
           </List>
           </Grid>
