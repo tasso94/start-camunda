@@ -77,12 +77,16 @@ function App() {
 
       }
     });
+
+    window.ga('send', 'event', 'Generate Project', 'click');
   }
 
   const [open, setOpen] = React.useState(false);
 
   function handleClickOpen() {
     setOpen(true);
+
+    window.ga('send', 'event', 'Explore Project', 'click');
   }
 
   function handleClose() {
@@ -125,6 +129,11 @@ function App() {
 
   const useStyles = makeStyles((theme: Theme) =>
     createStyles({
+      header: {
+          position: 'static',
+          backgroundImage: 'url(./background.png)',
+          backgroundPosition: '50%'
+      },
       button: {
         marginTop: 25,
       },
@@ -234,9 +243,9 @@ function App() {
     <div className="App">
       <AppBar position="static"
               color="default">
-        <Toolbar>
-          <img src="https://camunda.com/svg/logo.svg"
-               width={160} />
+        <Toolbar className={classes.header}>
+          <img src="./logo.svg"
+               width={110} />
         </Toolbar>
       </AppBar>
 
