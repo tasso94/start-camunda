@@ -253,7 +253,7 @@ function App() {
         <Paper className={classes.paper}>
         <Typography className={classes.headline}
                     variant="h5">
-          Start Camunda BPM
+          Camunda BPM Initializr
         </Typography>
         {starterVersions.length === 0 &&
           <Typography>
@@ -310,7 +310,7 @@ function App() {
                 sm={6}>
             <FormControl fullWidth
                          id="persistence">
-              <InputLabel htmlFor="persistence">Persistence</InputLabel>
+              <InputLabel htmlFor="persistence">H2 Database</InputLabel>
               <Select value={persistence}
                       onChange={e => setPersistence(e.target.value)}>
                 <MenuItem value="on-disk">On-Disk</MenuItem>
