@@ -4,8 +4,6 @@ import com.camunda.start.update.dto.StarterVersionDto;
 import com.camunda.start.update.dto.StarterVersionWrapperDto;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.versioning.ComparableVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -39,9 +37,10 @@ import java.util.regex.Matcher;
 import static com.camunda.start.update.Constants.IGNORED_MINOR_VERSIONS;
 import static com.camunda.start.update.Constants.IGNORED_VERSION_TAGS;
 import static com.camunda.start.update.Constants.REGEX_PATTERN_VERSION;
-import static com.camunda.start.update.Constants.URL_MAVEN_METADATA;
-import static com.camunda.start.update.Constants.URL_MAVEN_METADATA_MD5;
-import static com.camunda.start.update.Constants.URL_MAVEN_PROJECT_POM;
+import static com.camunda.start.update.Constants.URL_MAVEN_CAMUNDA_ROOT_POM;
+import static com.camunda.start.update.Constants.URL_MAVEN_SPRING_BOOT_METADATA;
+import static com.camunda.start.update.Constants.URL_MAVEN_SPRING_BOOT_METADATA_MD5;
+import static com.camunda.start.update.Constants.URL_MAVEN_SPRING_BOOT_ROOT_POM_LEGACY;
 import static com.camunda.start.update.Constants.XPATH_VERSIONS;
 
 @Component
@@ -115,24 +114,45 @@ public class VersionUpdater {
         List<StarterVersionDto> starterVersions = new ArrayList<>();
         
         for (int i = 0; i < 3; i++) {
-            String version = majorMinorVersions.get(i)
-                .toString();
+            ComparableVersion majorMinorVersion = majorMinorVersions.get(i);
 
-            String url = URL_MAVEN_PROJECT_POM.replace("{version}", version);
-
-            InputStream pom = getInputStreamByUrl(url);
-            Document pomDocument = createPomDocument(pom);
-
-            String springBootVersion = getVersion(pomDocument,
-                "/project/properties/spring-boot.version");
-
-            String camundaVersion = getVersion(pomDocument,
-                "/project/properties/camunda.version");;
+            String version = majorMinorVersion.toString();
 
             StarterVersionDto starterVersion = new StarterVersionDto();
-            starterVersion.setStarterVersion(version);
-            starterVersion.setCamundaVersion(camundaVersion);
-            starterVersion.setSpringBootVersion(springBootVersion);
+
+            if (majorMinorVersion.compareTo(new ComparableVersion("7.13.0-alpha1")) > 0) {
+
+                starterVersion.setStarterVersion(version);
+                starterVersion.setCamundaVersion(version);
+
+                String url = URL_MAVEN_CAMUNDA_ROOT_POM.replace("{version}", version);
+
+                InputStream pom = getInputStreamByUrl(url);
+                Document pomDocument = createPomDocument(pom);
+
+                String springBootVersion = getVersion(pomDocument,
+                    "/project/properties/version.spring-boot");
+
+                starterVersion.setSpringBootVersion(springBootVersion);
+
+            } else { // legacy versions
+
+                starterVersion.setStarterVersion(version);
+
+                String url = URL_MAVEN_SPRING_BOOT_ROOT_POM_LEGACY.replace("{version}", version);
+
+                InputStream pom = getInputStreamByUrl(url);
+                Document pomDocument = createPomDocument(pom);
+
+                String springBootVersion = getVersion(pomDocument,
+                    "/project/properties/spring-boot.version");
+
+                String camundaVersion = getVersion(pomDocument,
+                    "/project/properties/camunda.version");
+
+                starterVersion.setCamundaVersion(camundaVersion);
+                starterVersion.setSpringBootVersion(springBootVersion);
+            }
 
             starterVersions.add(starterVersion);
         }
@@ -169,7 +189,7 @@ public class VersionUpdater {
     }
 
     protected Set<String> fetchVersions() {
-        InputStream metadataInputStream = getInputStreamByUrl(URL_MAVEN_METADATA);
+        InputStream metadataInputStream = getInputStreamByUrl(URL_MAVEN_SPRING_BOOT_METADATA);
         Document xmlDocument = createPomDocument(metadataInputStream);
 
         NodeList nodeList = null;
@@ -199,7 +219,7 @@ public class VersionUpdater {
 
     protected String fetchChecksum() {
         try {
-            return IOUtils.toString(getInputStreamByUrl(URL_MAVEN_METADATA_MD5),
+            return IOUtils.toString(getInputStreamByUrl(URL_MAVEN_SPRING_BOOT_METADATA_MD5),
                 Charset.defaultCharset());
         } catch (IOException e) {
             throw new RuntimeException(e);

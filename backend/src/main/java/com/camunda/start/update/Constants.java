@@ -22,17 +22,23 @@ import java.util.regex.Pattern;
 
 public class Constants {
 
-  protected static final String URL_MAVEN_GROUP =
-      "https://repo1.maven.org/maven2/org/camunda/bpm/springboot/project/";
+  protected static final String URL_MAVEN_BASE =
+      "https://repo1.maven.org/maven2/org/camunda/bpm/";
 
-  protected static final String URL_MAVEN_METADATA =
-      URL_MAVEN_GROUP + "camunda-bpm-spring-boot-starter-root/maven-metadata.xml";
+  protected static final String URL_MAVEN_SPRING_BOOT_URL = URL_MAVEN_BASE + "springboot/project/";
 
-  protected static final String URL_MAVEN_METADATA_MD5 = URL_MAVEN_METADATA + ".md5";
+  protected static final String URL_MAVEN_SPRING_BOOT_METADATA =
+      URL_MAVEN_SPRING_BOOT_URL + "camunda-bpm-spring-boot-starter-root/maven-metadata.xml";
 
-  protected static final String URL_MAVEN_PROJECT_POM =
-      URL_MAVEN_GROUP + "camunda-bpm-spring-boot-starter-root/" +
+  protected static final String URL_MAVEN_SPRING_BOOT_METADATA_MD5 =
+      URL_MAVEN_SPRING_BOOT_METADATA + ".md5";
+
+  protected static final String URL_MAVEN_SPRING_BOOT_ROOT_POM_LEGACY =
+      URL_MAVEN_SPRING_BOOT_URL + "camunda-bpm-spring-boot-starter-root/" +
           "{version}/camunda-bpm-spring-boot-starter-root-{version}.pom";
+
+  protected static final String URL_MAVEN_CAMUNDA_ROOT_POM =
+      URL_MAVEN_BASE + "camunda-root/{version}/camunda-root-{version}.pom";
 
   protected static final String XPATH_VERSIONS = "/metadata/versioning/versions/version";
 
