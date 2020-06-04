@@ -233,7 +233,7 @@ public class ProjectGenerator {
 
     if ("on-disk".equals(persistence)) {
       dependencies.add(new Dependency()
-          .setArtifact("spring-boot-starter-data-jpa")
+          .setArtifact("spring-boot-starter-jdbc")
           .setGroup("org.springframework.boot"));
     } // else: in-memory
 
