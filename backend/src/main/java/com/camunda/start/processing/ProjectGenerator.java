@@ -41,10 +41,17 @@ public class ProjectGenerator {
   protected static final String JAVA_PATH = MAIN_PATH + "java/";
   protected static final String RESOURCES_PATH = MAIN_PATH + "resources/";
 
+  protected static final String TEST_MAIN_PATH = "/src/test/";
+  protected static final String TEST_JAVA_PATH = TEST_MAIN_PATH + "java/";
+  protected static final String TEST_RESOURCES_PATH = TEST_MAIN_PATH + "resources/";
+
   protected static final String APPLICATION_CLASS_NAME = "Application.java";
   protected static final String APPLICATION_YAML_NAME = "application.yaml";
   protected static final String APPLICATION_POM_NAME = "pom.xml";
   protected static final String APPLICATION_BPMN_NAME = "process.bpmn";
+  protected static final String APPLICATION_TEST_CASE_NAME = "ProcessUnitTest.java";
+  protected static final String APPLICATION_LOGCONFIG_NAME = "logback-test.xml";
+  
 
   protected static final String TEMPLATES_PATH = "/com/camunda/start/templates/";
 
@@ -66,6 +73,9 @@ public class ProjectGenerator {
     byte[] applicationYaml = processByFileName(APPLICATION_YAML_NAME);
     byte[] pomXml = processByFileName(APPLICATION_POM_NAME);
     byte[] processBpmn = processByFileName(APPLICATION_BPMN_NAME);
+    
+    byte[] logbackTestConfig = processByFileName(APPLICATION_LOGCONFIG_NAME);
+    byte[] testCase = processByFileName(APPLICATION_TEST_CASE_NAME);
 
     String projectName = (String) templateContext.get("artifact");
     String packageName = dotToSlash((String) templateContext.get("group"));
@@ -74,7 +84,9 @@ public class ProjectGenerator {
         new ByteSource(projectName + JAVA_PATH + packageName + "/" + APPLICATION_CLASS_NAME, applicationClass),
         new ByteSource(projectName + RESOURCES_PATH + APPLICATION_YAML_NAME, applicationYaml),
         new ByteSource(projectName + "/" + APPLICATION_POM_NAME, pomXml),
-        new ByteSource(projectName + RESOURCES_PATH + APPLICATION_BPMN_NAME, processBpmn)
+        new ByteSource(projectName + RESOURCES_PATH + APPLICATION_BPMN_NAME, processBpmn),
+        new ByteSource(projectName + TEST_JAVA_PATH + packageName + "/" + APPLICATION_TEST_CASE_NAME, testCase),
+        new ByteSource(projectName + TEST_RESOURCES_PATH + APPLICATION_LOGCONFIG_NAME, logbackTestConfig)
     };
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
