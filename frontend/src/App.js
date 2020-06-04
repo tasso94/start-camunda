@@ -228,6 +228,12 @@ function App() {
   function highlightProcess() {
     highlight('process.bpmn', 'xml');
   }
+  function highlightTestCase() {
+    highlight('ProcessUnitTest.java', 'java');
+  }
+  function highlightLogConfig() {
+    highlight('logback-test.xml', 'xml');
+  }
 
   const classes = useStyles();
 
@@ -497,6 +503,18 @@ function App() {
               <ListItemText onClick={highlightAppJava}
                             primary="Application.java"
                             secondary={artifact + '/src/main/java/' + group.replace(/\./g,'/') + '/'} />
+            </ListItem>
+            <Divider />
+            <ListItem button>
+              <ListItemText onClick={highlightTestCase}
+                            primary="ProcessUnitTest.java"
+                            secondary={artifact + '/src/test/java/' + group.replace(/\./g,'/') + '/'} />
+            </ListItem>
+            <Divider />
+            <ListItem button>
+              <ListItemText onClick={highlightLogConfig}
+                            primary="logback-test.xml"
+                            secondary={artifact + '/src/test/resources/'} />
             </ListItem>
           </List>
           </Grid>
