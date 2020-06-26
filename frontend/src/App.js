@@ -43,6 +43,7 @@ function App() {
         [modules, setModules] = useState({
           'camunda-rest': true,
           'camunda-webapps': true,
+          'camunda-assert': false,
           'spring-boot-security': false,
           'spring-boot-web': false
         }),
@@ -100,18 +101,6 @@ function App() {
       if (versions.starterVersion === version) {
         setSpringBootVersion(versions.springBootVersion);
         setCamundaVersion(versions.camundaVersion);
-      }
-    });
-  }
-
-  function fetchStarterVersions() {
-    fetch('./versions.json').then(response => {
-      if (response.status === 200) {
-        response.json().then(json => {
-          setStarterVersions(json.starterVersions);
-          var latestVersion = json.starterVersions[0].starterVersion;
-          changeStarterVersion(latestVersion, json.starterVersions);
-        });
       }
     });
   }
@@ -228,9 +217,11 @@ function App() {
   function highlightProcess() {
     highlight('process.bpmn', 'xml');
   }
+
   function highlightTestCase() {
-    highlight('ProcessUnitTest.java', 'java');
+    highlight('WorkflowTest.java', 'java');
   }
+
   function highlightLogConfig() {
     highlight('logback-test.xml', 'xml');
   }
@@ -238,6 +229,18 @@ function App() {
   const classes = useStyles();
 
   useEffect(() => {
+    function fetchStarterVersions() {
+      fetch('./versions.json').then(response => {
+        if (response.status === 200) {
+          response.json().then(json => {
+            setStarterVersions(json.starterVersions);
+            var latestVersion = json.starterVersions[0].starterVersion;
+            changeStarterVersion(latestVersion, json.starterVersions);
+          });
+        }
+      });
+    }
+
     fetchStarterVersions();
     window.addEventListener('beforeunload', function(e) {
       e.preventDefault();
@@ -251,7 +254,8 @@ function App() {
               color="default">
         <Toolbar className={classes.header}>
           <img src="./logo.svg"
-               width={110} />
+               width={110}
+               alt="Camunda"/>
         </Toolbar>
       </AppBar>
 
@@ -372,6 +376,23 @@ function App() {
                       <Link className={classes.docs}
                             target="_blank"
                             href={'https://docs.camunda.org/manual/' + getMajorMinor(camundaVersion) + '/webapps/cockpit/'}>
+                        <Tooltip title="Go to Docs" placement="top">
+                          <BookOutlined fontSize="small" />
+                        </Tooltip>
+                      </Link>
+                    </>
+                  } />
+                <FormControlLabel
+                  control={
+                    <Checkbox onChange={e => changeModules({name: 'camunda-assert', checked: e.target.checked})}
+                              defaultChecked={modules['camunda-assert']} />
+                  }
+                  label={
+                    <>
+                      Assert
+                      <Link className={classes.docs}
+                            target="_blank"
+                            href={'https://docs.camunda.org/manual/' + getMajorMinor(camundaVersion) + '/user-guide/testing/#camunda-assertions'}>
                         <Tooltip title="Go to Docs" placement="top">
                           <BookOutlined fontSize="small" />
                         </Tooltip>
@@ -504,18 +525,22 @@ function App() {
                             primary="Application.java"
                             secondary={artifact + '/src/main/java/' + group.replace(/\./g,'/') + '/'} />
             </ListItem>
-            <Divider />
-            <ListItem button>
-              <ListItemText onClick={highlightTestCase}
-                            primary="ProcessUnitTest.java"
-                            secondary={artifact + '/src/test/java/' + group.replace(/\./g,'/') + '/'} />
-            </ListItem>
-            <Divider />
-            <ListItem button>
-              <ListItemText onClick={highlightLogConfig}
-                            primary="logback-test.xml"
-                            secondary={artifact + '/src/test/resources/'} />
-            </ListItem>
+            {modules['camunda-assert'] &&
+              <>
+              <Divider />
+              <ListItem button>
+                <ListItemText onClick={highlightTestCase}
+                              primary="WorkflowTest.java"
+                              secondary={artifact + '/src/test/java/' + group.replace(/\./g, '/') + '/'} />
+              </ListItem>
+              <Divider />
+              <ListItem button>
+                <ListItemText onClick={highlightLogConfig}
+                              primary="logback-test.xml"
+                              secondary={artifact + '/src/test/resources/'} />
+              </ListItem>
+              </>
+            }
           </List>
           </Grid>
           <Grid item xs={12} sm={8}>

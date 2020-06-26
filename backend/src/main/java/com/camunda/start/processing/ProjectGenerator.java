@@ -27,6 +27,7 @@ import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -49,9 +50,8 @@ public class ProjectGenerator {
   protected static final String APPLICATION_YAML_NAME = "application.yaml";
   protected static final String APPLICATION_POM_NAME = "pom.xml";
   protected static final String APPLICATION_BPMN_NAME = "process.bpmn";
-  protected static final String APPLICATION_TEST_CASE_NAME = "ProcessUnitTest.java";
+  protected static final String APPLICATION_TEST_CASE_NAME = "WorkflowTest.java";
   protected static final String APPLICATION_LOGCONFIG_NAME = "logback-test.xml";
-  
 
   protected static final String TEMPLATES_PATH = "/com/camunda/start/templates/";
 
@@ -73,25 +73,29 @@ public class ProjectGenerator {
     byte[] applicationYaml = processByFileName(APPLICATION_YAML_NAME);
     byte[] pomXml = processByFileName(APPLICATION_POM_NAME);
     byte[] processBpmn = processByFileName(APPLICATION_BPMN_NAME);
-    
-    byte[] logbackTestConfig = processByFileName(APPLICATION_LOGCONFIG_NAME);
-    byte[] testCase = processByFileName(APPLICATION_TEST_CASE_NAME);
 
     String projectName = (String) templateContext.get("artifact");
     String packageName = dotToSlash((String) templateContext.get("group"));
 
-    ZipEntrySource[] entries = new ZipEntrySource[] {
+    List<ZipEntrySource> entries = new ArrayList<>(Arrays.asList(
         new ByteSource(projectName + JAVA_PATH + packageName + "/" + APPLICATION_CLASS_NAME, applicationClass),
         new ByteSource(projectName + RESOURCES_PATH + APPLICATION_YAML_NAME, applicationYaml),
         new ByteSource(projectName + "/" + APPLICATION_POM_NAME, pomXml),
-        new ByteSource(projectName + RESOURCES_PATH + APPLICATION_BPMN_NAME, processBpmn),
-        new ByteSource(projectName + TEST_JAVA_PATH + packageName + "/" + APPLICATION_TEST_CASE_NAME, testCase),
-        new ByteSource(projectName + TEST_RESOURCES_PATH + APPLICATION_LOGCONFIG_NAME, logbackTestConfig)
-    };
+        new ByteSource(projectName + RESOURCES_PATH + APPLICATION_BPMN_NAME, processBpmn)
+    ));
+
+    boolean isCamundaAssert = (boolean) templateContext.get("isCamundaAssert");
+    if (isCamundaAssert) {
+      byte[] logbackTestConfig = processByFileName(APPLICATION_LOGCONFIG_NAME);
+      byte[] testCase = processByFileName(APPLICATION_TEST_CASE_NAME);
+
+      entries.add(new ByteSource(projectName + TEST_JAVA_PATH + packageName + "/" + APPLICATION_TEST_CASE_NAME, testCase));
+      entries.add(new ByteSource(projectName + TEST_RESOURCES_PATH + APPLICATION_LOGCONFIG_NAME, logbackTestConfig));
+    }
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    ZipUtil.pack(entries, baos);
+    ZipUtil.pack(entries.toArray(new ZipEntrySource[0]), baos);
 
     return baos.toByteArray();
   }
@@ -180,7 +184,11 @@ public class ProjectGenerator {
     context.put("artifact", inputData.getArtifact());
     context.put("projectVersion", inputData.getVersion());
 
+    List<String> modules = inputData.getModules();
     context.put("dependencies", getDeps(inputData.getModules(), inputData.getPersistence()));
+
+    boolean isCamundaAssert = modules.stream().anyMatch("camunda-assert"::equals);
+    context.put("isCamundaAssert", isCamundaAssert);
 
     return context;
   }
@@ -217,6 +225,15 @@ public class ProjectGenerator {
               .setVersion(inputData.getStarterVersion());
 
           dependencies.add(camundaRest);
+          break;
+        case "camunda-assert":
+
+          Dependency camundaTest = new Dependency()
+              .setGroup("org.camunda.bpm.springboot")
+              .setArtifact("camunda-bpm-spring-boot-starter-test")
+              .setVersion(inputData.getStarterVersion());
+
+          dependencies.add(camundaTest);
           break;
         case "spring-boot-security":
 
