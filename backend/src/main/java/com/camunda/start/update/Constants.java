@@ -40,6 +40,9 @@ public class Constants {
   protected static final String URL_MAVEN_CAMUNDA_ROOT_POM =
       URL_MAVEN_BASE + "camunda-root/{version}/camunda-root-{version}.pom";
 
+  protected static final String URL_MAVEN_CAMUNDA_PARENT_POM =
+      URL_MAVEN_BASE + "camunda-parent/{version}/camunda-parent-{version}.pom";
+
   protected static final String XPATH_VERSIONS = "/metadata/versioning/versions/version";
 
   protected static final Pattern REGEX_PATTERN_VERSION = Pattern.compile("^([0-9]+).([0-9]+)(.*)");

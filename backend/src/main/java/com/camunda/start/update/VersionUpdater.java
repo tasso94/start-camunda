@@ -38,6 +38,7 @@ import static com.camunda.start.update.Constants.IGNORED_MINOR_VERSIONS;
 import static com.camunda.start.update.Constants.IGNORED_VERSION_TAGS;
 import static com.camunda.start.update.Constants.REGEX_PATTERN_VERSION;
 import static com.camunda.start.update.Constants.URL_MAVEN_CAMUNDA_ROOT_POM;
+import static com.camunda.start.update.Constants.URL_MAVEN_CAMUNDA_PARENT_POM;
 import static com.camunda.start.update.Constants.URL_MAVEN_SPRING_BOOT_METADATA;
 import static com.camunda.start.update.Constants.URL_MAVEN_SPRING_BOOT_METADATA_MD5;
 import static com.camunda.start.update.Constants.URL_MAVEN_SPRING_BOOT_ROOT_POM_LEGACY;
@@ -125,7 +126,14 @@ public class VersionUpdater {
                 starterVersion.setStarterVersion(version);
                 starterVersion.setCamundaVersion(version);
 
-                String url = URL_MAVEN_CAMUNDA_ROOT_POM.replace("{version}", version);
+                String url = null;
+                if (majorMinorVersion.compareTo(new ComparableVersion("7.14.0-alpha4")) > 0) {
+                    url = URL_MAVEN_CAMUNDA_PARENT_POM.replace("{version}", version);
+
+                } else {
+                    url = URL_MAVEN_CAMUNDA_ROOT_POM.replace("{version}", version);
+
+                }
 
                 InputStream pom = getInputStreamByUrl(url);
                 Document pomDocument = createPomDocument(pom);
