@@ -4,20 +4,29 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>$springBootVersion</version>
-    <relativePath/>
-  </parent>
-
-  <properties>
-    <java.version>$javaVersion</java.version>
-  </properties>
-
   <groupId>$group</groupId>
   <artifactId>$artifact</artifactId>
   <version>$projectVersion</version>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>$springBootVersion</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.camunda.bpm</groupId>
+        <artifactId>camunda-bom</artifactId>
+        <version>$camundaVersion</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     #foreach($dependency in $dependencies)
@@ -37,6 +46,17 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>$springBootVersion</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <source>$javaVersion</source>
+          <target>$javaVersion</target>
+        </configuration>
       </plugin>
     </plugins>
   </build>

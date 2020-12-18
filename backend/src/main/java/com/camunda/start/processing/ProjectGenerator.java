@@ -127,7 +127,7 @@ public class ProjectGenerator {
 
   protected void addDefaultValues(DownloadProjectDto inputData) {
     if (isEmpty(inputData.getModules())) {
-      inputData.setModules(Collections.singletonList("camunda-rest"));
+      inputData.setModules(Collections.singletonList("camunda-base"));
     }
     if (isEmpty(inputData.getGroup())) {
       inputData.setGroup("com.example.workflow");
@@ -208,6 +208,15 @@ public class ProjectGenerator {
 
     modules.forEach(module -> {
       switch (module) {
+        case "camunda-base":
+
+          Dependency camundaBase = new Dependency()
+              .setGroup("org.camunda.bpm.springboot")
+              .setArtifact("camunda-bpm-spring-boot-starter")
+              .setVersion(inputData.getStarterVersion());
+
+          dependencies.add(camundaBase);
+          break;
         case "camunda-webapps":
 
           Dependency camundaWebapps = new Dependency()
@@ -225,6 +234,20 @@ public class ProjectGenerator {
               .setVersion(inputData.getStarterVersion());
 
           dependencies.add(camundaRest);
+          break;
+        case "camunda-spin":
+
+          Dependency camundaSpin = new Dependency()
+              .setGroup("org.camunda.bpm")
+              .setArtifact("camunda-engine-plugin-spin");
+
+          dependencies.add(camundaSpin);
+
+          Dependency spinDataformatAll = new Dependency()
+              .setGroup("org.camunda.spin")
+              .setArtifact("camunda-spin-dataformat-all");
+
+          dependencies.add(spinDataformatAll);
           break;
         case "camunda-assert":
 
