@@ -243,7 +243,7 @@ const App = () => {
       <Container className={classes.root}>
         <Paper className={classes.paper}>
           <Typography className={classes.headline} variant="h5">
-            Camunda BPM Initializr
+            Camunda Platform Initializr
           </Typography>
           {Object.keys(formData).length === 0 && (
             <Typography>Loading...</Typography>
@@ -283,7 +283,7 @@ const App = () => {
               <Grid item xs={12} sm={6}>
                 <FormControl id="camunda-version" fullWidth>
                   <InputLabel htmlFor="camunda-version">
-                    Camunda BPM Version
+                    Camunda Platform Version
                   </InputLabel>
                   <Select
                     value={formData.starterVersion.value}
@@ -363,7 +363,7 @@ const App = () => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl id="camunda-modules">
-                  <FormLabel component="legend">Camunda BPM Modules</FormLabel>
+                  <FormLabel component="legend">Camunda Platform Modules</FormLabel>
 
                   <FormGroup>
                     <FormControlLabel

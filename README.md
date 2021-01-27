@@ -1,4 +1,4 @@
-# Start Camunda BPM
+# Start Camunda Platform
 
 A Webapp to generate & customize your Camunda Spring Boot Starter project.
 
@@ -16,4 +16,4 @@ Make sure you have npm and maven installed.
 2. run `docker run --rm -it -p9090:9090 start-camunda`
 3. Open the following link in your browser: [http://localhost:9090](http://localhost:9090)
 
-![Start Camunda BPM](./screenshot.png)
+![Start Camunda Platform](./screenshot.png)
