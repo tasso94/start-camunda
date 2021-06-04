@@ -36,14 +36,10 @@ RUN /usr/lib/jvm/java-11-openjdk/bin/jlink \
 
 FROM alpine:latest
 RUN apk -U upgrade --no-cache 
-# && apk add libcap
 
 ENV JAVA_HOME="/opt/java-mini"
 ENV PATH="$PATH:$JAVA_HOME/bin"
 COPY --from=packager "$JAVA_HOME" "$JAVA_HOME"
-
-# Enable non-root processes to bind to ports <1024
-# RUN setcap 'cap_net_bind_service=+ep' "$JAVA_HOME"
 
 COPY --from=builder /build/backend/target/start-camunda-0.0.1-SNAPSHOT.jar /
 
