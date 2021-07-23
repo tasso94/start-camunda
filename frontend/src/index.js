@@ -5,9 +5,9 @@ import App from './App';
 import { ThemeProvider } from '@material-ui/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { red } from '@material-ui/core/colors';
-import { createMuiTheme } from '@material-ui/core/styles';
+import { createTheme } from '@material-ui/core/styles'
 
-const theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     primary: {
       main: 'rgb(255,138,1)',

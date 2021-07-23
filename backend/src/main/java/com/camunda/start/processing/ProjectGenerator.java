@@ -48,7 +48,7 @@ public class ProjectGenerator {
 
   protected static final String APPLICATION_CLASS_NAME = "Application.java";
   protected static final String APPLICATION_YAML_NAME = "application.yaml";
-  protected static final String APPLICATION_YAML_TEST_NAME = "application.yaml.test";
+  protected static final String APPLICATION_YAML_TEST_NAME = "application.yaml";
   protected static final String APPLICATION_POM_NAME = "pom.xml";
   protected static final String APPLICATION_BPMN_NAME = "process.bpmn";
   protected static final String APPLICATION_TEST_CASE_NAME = "WorkflowTest.java";
@@ -93,7 +93,7 @@ public class ProjectGenerator {
 
       entries.add(new ByteSource(projectName + TEST_JAVA_PATH + packageName + "/" + APPLICATION_TEST_CASE_NAME, testCase));
       entries.add(new ByteSource(projectName + TEST_RESOURCES_PATH + APPLICATION_LOGCONFIG_NAME, logbackTestConfig));
-      entries.add(new ByteSource(projectName + TEST_RESOURCES_PATH + APPLICATION_YAML_NAME, applicationYamlTest));
+      entries.add(new ByteSource(projectName + TEST_RESOURCES_PATH + APPLICATION_YAML_TEST_NAME, applicationYamlTest));
     }
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();

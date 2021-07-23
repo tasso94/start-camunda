@@ -42,7 +42,7 @@ const initialFormData = {
   username: { value: "" },
   password: { value: "" },
   persistence: { value: "on-disk" },
-  javaVersion: { value: "8" },
+  javaVersion: { value: "11" },
 };
 
 const initialModules = {
@@ -661,6 +661,14 @@ const App = () => {
                           formData.group.value.replace(/\./g, "/") +
                           "/"
                         }
+                      />
+                    </ListItem>
+                    <Divider />
+                    <ListItem button>
+                      <ListItemText
+                        onClick={() => highlight("application.yaml", "yaml")}
+                        primary="application.yaml"
+                        secondary={formData.artifact.value + "/src/test/resources/"}
                       />
                     </ListItem>
                     <Divider />
