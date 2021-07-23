@@ -221,8 +221,7 @@ public class ProjectGenerator {
 
           Dependency camundaWebapps = new Dependency()
               .setGroup("org.camunda.bpm.springboot")
-              .setArtifact("camunda-bpm-spring-boot-starter-webapp")
-              .setVersion(inputData.getStarterVersion());
+              .setArtifact("camunda-bpm-spring-boot-starter-webapp");
 
           dependencies.add(camundaWebapps);
           break;
@@ -230,8 +229,7 @@ public class ProjectGenerator {
 
           Dependency camundaRest = new Dependency()
               .setGroup("org.camunda.bpm.springboot")
-              .setArtifact("camunda-bpm-spring-boot-starter-rest")
-              .setVersion(inputData.getStarterVersion());
+              .setArtifact("camunda-bpm-spring-boot-starter-rest");
 
           dependencies.add(camundaRest);
           break;
@@ -253,8 +251,7 @@ public class ProjectGenerator {
 
           Dependency camundaTest = new Dependency()
               .setGroup("org.camunda.bpm.springboot")
-              .setArtifact("camunda-bpm-spring-boot-starter-test")
-              .setVersion(inputData.getStarterVersion());
+              .setArtifact("camunda-bpm-spring-boot-starter-test");
 
           dependencies.add(camundaTest);
           break;
