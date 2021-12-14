@@ -4,7 +4,7 @@ RUN apt-get update \
   && apt-get install wget curl ca-certificates rsync -y \
   && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_VERSION=10.16.3
+ENV NODE_VERSION=13.11.0
 RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 
 ENV NVM_DIR=/root/.nvm
