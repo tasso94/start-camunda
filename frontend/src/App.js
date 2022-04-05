@@ -42,7 +42,7 @@ const initialFormData = {
   username: { value: "" },
   password: { value: "" },
   persistence: { value: "on-disk" },
-  javaVersion: { value: "11" },
+  javaVersion: { value: "15" },
 };
 
 const initialModules = {
@@ -354,7 +354,7 @@ const App = () => {
                     setFormData({
                       javaVersion: {
                         value: newJavaVersion,
-                        error: !(newJavaVersion >= 8 && newJavaVersion <= 11),
+                        error: !(newJavaVersion >= 8 && newJavaVersion <= 15),
                       },
                       ...rest,
                     });
