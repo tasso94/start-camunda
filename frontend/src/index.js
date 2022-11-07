@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import {createRoot} from 'react-dom/client';
 import App from './App';
 
 import { ThemeProvider } from '@material-ui/styles';
@@ -24,10 +24,10 @@ const theme = createTheme({
   },
 });
 
-ReactDOM.render(
+const root = createRoot(document.querySelector('#root'));
+root.render(
   <ThemeProvider theme={theme}>
-    <CssBaseline />
-    <App />
-  </ThemeProvider>,
-  document.querySelector('#root'),
+  <CssBaseline />
+  <App />
+</ThemeProvider>
 );
