@@ -26,7 +26,7 @@ const theme = createTheme({
 
 const root = createRoot(document.querySelector('#root'));
 root.render(
-  <ThemeProvider theme={theme}>
+<ThemeProvider theme={theme}>
   <CssBaseline />
   <App />
 </ThemeProvider>
