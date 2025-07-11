@@ -15,7 +15,7 @@ import {
   Toolbar,
   AppBar,
   Paper,
-  Grid,
+  Grid2 as Grid,
   MenuItem,
   Select,
   InputLabel,
@@ -26,15 +26,23 @@ import {
   FormControl,
   Container,
   TextField,
-} from "@material-ui/core";
+} from "@mui/material";
 
-import { createStyles, makeStyles } from "@material-ui/core/styles";
-import { Close, BookOutlined } from "@material-ui/icons";
+import { Close, BookOutlined } from "@mui/icons-material";
 
 import SyntaxHighlighter from "react-syntax-highlighter";
 import a11yLight from "react-syntax-highlighter/dist/esm/styles/hljs/a11y-light";
 
-import downloadjs from "downloadjs";
+const downloadFile = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 const initialFormData = {
   artifact: { value: "my-project" },
@@ -88,45 +96,6 @@ const getPayload = (formData) =>
     }
     return acc;
   }, {});
-
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    header: {
-      position: "static",
-      backgroundImage: "url(./background.png)",
-      backgroundPosition: "50%",
-    },
-    button: {
-      marginTop: 25,
-    },
-    headline: {
-      marginBottom: 25,
-    },
-    root: {
-      marginTop: 60,
-      width: 700,
-    },
-    paper: {
-      padding: theme.spacing(6, 4),
-    },
-    appBar: {
-      backgroundColor: theme.palette.secondary.main,
-    },
-    footer: {
-      top: "auto",
-      bottom: 0,
-      height: 40,
-      padding: 10,
-    },
-    list: {
-      marginTop: 80,
-    },
-    docs: {
-      marginLeft: 15,
-      verticalAlign: "text-top",
-    },
-  })
-);
 
 const App = () => {
   const [formData, setFormData] = useState({});
@@ -197,7 +166,7 @@ const App = () => {
       if (response.status === 200) {
         response
           .blob()
-          .then((blob) => downloadjs(blob, `${formData.artifact.value}.zip`));
+          .then((blob) => downloadFile(blob, `${formData.artifact.value}.zip`));
       }
     });
   };
@@ -231,18 +200,30 @@ const App = () => {
     });
   };
 
-  const classes = useStyles();
-
   return (
     <div className="App">
       <AppBar position="static" color="default">
-        <Toolbar className={classes.header}>
+        <Toolbar
+          sx={{
+            backgroundImage: "url(./background.png)",
+            backgroundPosition: "50%",
+          }}
+        >
           <img src="./logo.svg" width={110} alt="Camunda" />
         </Toolbar>
       </AppBar>
-      <Container className={classes.root}>
-        <Paper className={classes.paper}>
-          <Typography className={classes.headline} variant="h5">
+      <Container
+        sx={{
+          marginTop: 8,
+          width: 700,
+        }}
+      >
+        <Paper
+          sx={{
+            padding: (theme) => theme.spacing(6, 4),
+          }}
+        >
+          <Typography sx={{ marginBottom: 3 }} variant="h5">
             Camunda Automation Platform 7 Initializr
           </Typography>
           {Object.keys(formData).length === 0 && (
@@ -382,7 +363,7 @@ const App = () => {
                         <>
                           REST API
                           <Link
-                            className={classes.docs}
+                            sx={{ marginLeft: 1 }}
                             target="_blank"
                             href={
                               "https://docs.camunda.org/manual/" +
@@ -413,7 +394,7 @@ const App = () => {
                         <>
                           Webapps
                           <Link
-                            className={classes.docs}
+                            sx={{ marginLeft: 1 }}
                             target="_blank"
                             href={
                               "https://docs.camunda.org/manual/" +
@@ -444,7 +425,7 @@ const App = () => {
                         <>
                           Spin (XML & JSON)
                           <Link
-                            className={classes.docs}
+                            sx={{ marginLeft: 1 }}
                             target="_blank"
                             href={`https://docs.camunda.org/manual/${getMajorMinor(
                               formData.camundaVersion.value
@@ -473,7 +454,7 @@ const App = () => {
                         <>
                           Assert
                           <Link
-                            className={classes.docs}
+                            sx={{ marginLeft: 1 }}
                             target="_blank"
                             href={`https://docs.camunda.org/manual/${getMajorMinor(
                               formData.camundaVersion.value
@@ -560,7 +541,7 @@ const App = () => {
                 <Button
                   variant="contained"
                   color="primary"
-                  className={classes.button}
+                  sx={{ marginTop: 3 }}
                   disabled={error}
                   onClick={generateProject}
                 >
@@ -571,7 +552,7 @@ const App = () => {
                 <Button
                   variant="contained"
                   color="secondary"
-                  className={classes.button}
+                  sx={{ marginTop: 3 }}
                   disabled={error}
                   onClick={() => setOpenExplorer(true)}
                 >
@@ -582,8 +563,8 @@ const App = () => {
           )}
         </Paper>
       </Container>
-      <AppBar position="fixed" color="default" className={classes.footer}>
-        <Box align="center">
+      <AppBar position="fixed" color="default" sx={{ top: "auto", bottom: 0 }}>
+        <Box align="center" sx={{ padding: 1 }}>
           <Link href="https://camunda.com/legal/privacy/">
             Privacy Statement
           </Link>{" "}
@@ -593,7 +574,7 @@ const App = () => {
       </AppBar>
       {Object.keys(formData).length > 0 && (
         <Dialog open={openExplorer} onClose={handleClose} fullScreen>
-          <AppBar className={classes.appBar}>
+          <AppBar sx={{ backgroundColor: (theme) => theme.palette.secondary.main }}>
             <Toolbar>
               <IconButton
                 edge="start"
@@ -603,7 +584,7 @@ const App = () => {
               >
                 <Close />
               </IconButton>
-              <Typography variant="h6" className={classes.title}>
+              <Typography variant="h6" sx={{ flexGrow: 1 }}>
                 Project Explorer
               </Typography>
             </Toolbar>
@@ -611,7 +592,7 @@ const App = () => {
 
           <Grid container spacing={3}>
             <Grid item xs={12} sm={4}>
-              <List className={classes.list}>
+              <List sx={{ marginTop: 10 }}>
                 <ListItem button>
                   <ListItemText
                     onClick={() => highlight("pom.xml", "xml")}
@@ -686,7 +667,7 @@ const App = () => {
               </List>
             </Grid>
             <Grid item xs={12} sm={8}>
-              <Box className={classes.list}>
+              <Box sx={{ marginTop: 10 }}>
                 {sourceCode && (
                   <pre>
                     <code style={{ fontSize: "1rem" }}>

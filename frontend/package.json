@@ -2,28 +2,25 @@
   "name": "start-camunda",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-scripts": "5.0.1",
-    "@material-ui/core": "4.12.4",
-    "@material-ui/icons": "4.11.3",
-    "downloadjs": "1.4.7",
-    "jss": "10.10.0",
-    "react-syntax-highlighter": "15.5.0"
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "@mui/material": "^6.1.6",
+    "@mui/icons-material": "^6.1.6",
+    "@emotion/react": "^11.13.5",
+    "@emotion/styled": "^11.13.5",
+    "react-syntax-highlighter": "15.6.1"
   },
   "devDependencies": {
-    "prettier": "2.7.1"
+    "prettier": "3.6.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.1"
   },
-  "proxy": "http://localhost:9090",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "browserslist": {
     "production": [

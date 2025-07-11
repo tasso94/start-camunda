@@ -8,10 +8,20 @@ A Webapp to generate & customize your Camunda Spring Boot Starter project.
 
 Make sure you have npm and maven installed.
 
+### Backend
 1. Go to the backend folder `cd ./backend`
 2. Run `mvn clean install`
 3. Run the Uber-Jar `java -jar ./target/start-camunda-0.0.1-SNAPSHOT.jar`
-4. Open the following link in your browser: [http://localhost:9090](http://localhost:9090)
+
+### Frontend Development (Optional)
+If you want to develop the frontend separately:
+1. Go to the frontend folder `cd ./frontend`
+2. Run `npm install`
+3. Run `npm run dev` (starts Vite dev server on http://localhost:3000)
+4. The frontend will proxy API calls to the backend at http://localhost:9090
+
+### Full Application
+Open the following link in your browser: [http://localhost:9090](http://localhost:9090)
 
 ### Using docker
 1. run `docker build . -t start-camunda`
@@ -20,7 +30,7 @@ Make sure you have npm and maven installed.
 
 ### Deploy to ECS
 
-1. `docker build --platform=amd64 -t registry.camunda.cloud/team-cambpm-public/start.camunda.com:$TAG .`
+1. `docker build -t registry.camunda.cloud/team-cambpm-public/start.camunda.com:$TAG .`
    * `$TAG`: Docker image tag
 2. `docker push registry.camunda.cloud/team-cambpm-public/start.camunda.com:$TAG`
 3. `aws ecs list-task-definitions --family-prefix ecs_start_camunda_com`

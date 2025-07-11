@@ -1,7 +1,7 @@
-FROM maven:3.8.5-openjdk-17-slim as builder
+FROM maven:3.9.10 AS builder
 
-RUN apt-get update \
-  && apt-get install wget curl ca-certificates rsync -y \
+RUN apt update \
+  && apt install wget curl ca-certificates rsync -y \
   && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_VERSION=18.16.0
@@ -19,18 +19,18 @@ RUN . "$NVM_DIR/nvm.sh" && mvn clean install -Djdk.lang.Process.launchMechanism=
 
 # ===== END BUILD STAGE ====
 
-FROM openjdk:17-jdk-slim
-RUN apt-get update \
-  && apt-get install -y \
+FROM eclipse-temurin:21
+RUN apt update \
+  && apt install -y \
     libcap2-bin \
   && rm -rf /var/lib/apt/lists/*
 
 # Enable non-root processes to bind to ports <1024
-RUN setcap 'cap_net_bind_service=+ep' /usr/local/openjdk-17/bin/java
+RUN setcap 'cap_net_bind_service=+ep' /opt/java/openjdk/bin/java
 
 COPY --from=builder /build/backend/target/start-camunda-0.0.1-SNAPSHOT.jar /
 
-CMD /usr/local/openjdk-17/bin/java -jar -Dserver.port=80 /start-camunda-0.0.1-SNAPSHOT.jar
+CMD /opt/java/openjdk/bin/java -jar -Dserver.port=80 /start-camunda-0.0.1-SNAPSHOT.jar
 
 USER www-data
 EXPOSE 80 

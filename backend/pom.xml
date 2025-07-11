@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.1.4</version>
+    <version>3.5.3</version>
     <relativePath/>
   </parent>
 
@@ -29,26 +29,26 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.13.0</version>
+      <version>2.19.0</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
-      <version>3.9.3</version>
+      <version>3.9.10</version>
     </dependency>
 
     <dependency>
       <groupId>org.zeroturnaround</groupId>
       <artifactId>zt-zip</artifactId>
-      <version>1.15</version>
+      <version>1.17</version>
       <type>jar</type>
     </dependency>
 
     <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity-engine-core</artifactId>
-      <version>2.3</version>
+      <version>2.4.1</version>
     </dependency>
 
   </dependencies>
@@ -63,7 +63,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.5.1</version>
         <configuration>
           <workingDirectory>../frontend</workingDirectory>
         </configuration>
