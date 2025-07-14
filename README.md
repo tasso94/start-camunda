@@ -46,7 +46,7 @@ Open the following link in your browser: [http://localhost:9090](http://localhos
 6. ```
    aws ecs update-service --cluster arn:aws:ecs:eu-central-1:$ACCOUNT_ID:cluster/startcamundacom \
    --service arn:aws:ecs:eu-central-1:$ACCOUNT_ID:service/startcamundacom/start_camunda_com_V2 \
-   --task-definition arn:aws:ecs:eu-central-1:$ACCOUNT_ID:task-definition/ecs_start_camunda_com:$VERSION \  
+   --task-definition arn:aws:ecs:eu-central-1:$ACCOUNT_ID:task-definition/ecs_start_camunda_com:$VERSION \
    --profile StartCamundaCom-578853869218
    ```
    * `$VERSION`: New task definition version
