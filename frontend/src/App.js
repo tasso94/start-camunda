@@ -50,7 +50,7 @@ const initialFormData = {
   username: { value: "" },
   password: { value: "" },
   persistence: { value: "on-disk" },
-  javaVersion: { value: "17" },
+  javaVersion: { value: "21" },
 };
 
 const initialModules = {
@@ -224,7 +224,7 @@ const App = () => {
           }}
         >
           <Typography sx={{ marginBottom: 3 }} variant="h5">
-            Camunda Automation Platform 7 Initializr
+            Camunda 7 Initializr
           </Typography>
           {Object.keys(formData).length === 0 && (
             <Typography>Loading...</Typography>
@@ -335,7 +335,7 @@ const App = () => {
                     setFormData({
                       javaVersion: {
                         value: newJavaVersion,
-                        error: !(newJavaVersion >= 8 && newJavaVersion <= 17),
+                        error: !(newJavaVersion >= 11 && newJavaVersion <= 21),
                       },
                       ...rest,
                     });
