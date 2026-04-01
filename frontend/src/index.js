@@ -5,21 +5,74 @@ import App from './App';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { red } from '@mui/material/colors';
-import { createTheme } from '@mui/material/styles'
+import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: 'rgb(255,138,1)',
+      main: '#FC5D0D',
     },
     secondary: {
-      main: '#14d890',
+      main: '#000',
     },
     error: {
       main: red.A400,
     },
     background: {
-      default: '#fafafa',
+      default: '#F0F2F5',
+    },
+  },
+  shape: {
+    borderRadius: 10,
+  },
+  typography: {
+    h5: {
+      fontWeight: 700,
+    },
+    h6: {
+      fontWeight: 600,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          fontWeight: 600,
+          borderRadius: 8,
+          padding: '8px 20px',
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08)',
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(20, 216, 144, 0.1)',
+            '&:hover': {
+              backgroundColor: 'rgba(20, 216, 144, 0.15)',
+            },
+          },
+        },
+      },
     },
   },
 });

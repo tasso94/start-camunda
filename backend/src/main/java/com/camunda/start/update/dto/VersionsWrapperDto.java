@@ -14,39 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.camunda.start.processing;
+package com.camunda.start.update.dto;
 
-public class Dependency {
+public class VersionsWrapperDto {
 
-  protected String group;
-  protected String artifact;
-  protected String version;
+  protected String checksum;
+  protected VersionsDto versions;
 
-  public Dependency setGroup(String group) {
-    this.group = group;
-    return this;
+  public String getChecksum() {
+    return checksum;
   }
 
-  public Dependency setArtifact(String artifact) {
-    this.artifact = artifact;
-    return this;
+  public void setChecksum(String checksum) {
+    this.checksum = checksum;
   }
 
-  public Dependency setVersion(String version) {
-    this.version = version;
-    return this;
+  public VersionsDto getVersions() {
+    return versions;
   }
 
-  public String getGroup() {
-    return group;
-  }
-
-  public String getArtifact() {
-    return artifact;
-  }
-
-  public String getVersion() {
-    return version;
+  public void setVersions(VersionsDto versions) {
+    this.versions = versions;
   }
 
 }

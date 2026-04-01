@@ -19,6 +19,8 @@ package com.camunda.start.rest;
 import com.camunda.start.processing.ProjectGenerator;
 import com.camunda.start.rest.dto.DownloadProjectDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,19 +34,26 @@ public class GeneratingController {
   @Autowired
   protected ProjectGenerator projectGenerator;
 
-  @ExceptionHandler({ BadUserRequestException.class })
   @PostMapping(value = "/download")
   public @ResponseBody byte[] downloadProject(@RequestBody DownloadProjectDto inputData) {
 
     return projectGenerator.generate(inputData);
   }
 
-  @ExceptionHandler({ BadUserRequestException.class })
-  @PostMapping(value = "/show/{fileName}")
+  @PostMapping(value = "/show/{fileKey}")
   public @ResponseBody String showFile(@RequestBody DownloadProjectDto inputData,
-                                       @PathVariable String fileName) {
+                                       @PathVariable String fileKey) {
 
-    return projectGenerator.generate(inputData, fileName);
+    return projectGenerator.generate(inputData, fileKey);
+  }
+
+  @ExceptionHandler(BadUserRequestException.class)
+  public ResponseEntity<String> handleBadUserRequest(BadUserRequestException ex) {
+    String message = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+    if (message == null || message.isBlank()) {
+      message = "Bad request";
+    }
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
   }
 
 }
