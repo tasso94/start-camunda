@@ -29,8 +29,10 @@ public class DownloadProjectDto {
   public String artifact;
   public String version;
 
-  public String starterVersion;
+  public String camundaVersion;
   public String javaVersion;
+
+  public String language;
 
   public List<String> modules;
 
@@ -98,12 +100,20 @@ public class DownloadProjectDto {
     return modules;
   }
 
-  public void setStarterVersion(String starterVersion) {
-    this.starterVersion = starterVersion;
+  public void setCamundaVersion(String camundaVersion) {
+    this.camundaVersion = camundaVersion;
   }
 
-  public String getStarterVersion() {
-    return starterVersion;
+  public String getCamundaVersion() {
+    return camundaVersion;
+  }
+
+  public void setLanguage(String language) {
+    this.language = language;
+  }
+
+  public String getLanguage() {
+    return language;
   }
 
 }

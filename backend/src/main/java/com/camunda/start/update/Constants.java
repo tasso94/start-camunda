@@ -22,37 +22,29 @@ import java.util.regex.Pattern;
 
 public class Constants {
 
-  protected static final String URL_MAVEN_BASE =
-      "https://repo1.maven.org/maven2/org/camunda/bpm/";
+  protected static final String URL_MAVEN_C8_BASE =
+      "https://repo1.maven.org/maven2/io/camunda/";
 
-  protected static final String URL_MAVEN_SPRING_BOOT_URL = URL_MAVEN_BASE + "springboot/project/";
+  protected static final String URL_MAVEN_C8_METADATA =
+      URL_MAVEN_C8_BASE + "camunda-spring-boot-starter/maven-metadata.xml";
 
-  protected static final String URL_MAVEN_SPRING_BOOT_METADATA =
-      URL_MAVEN_SPRING_BOOT_URL + "camunda-bpm-spring-boot-starter-root/maven-metadata.xml";
+  protected static final String URL_MAVEN_C8_METADATA_MD5 =
+      URL_MAVEN_C8_METADATA + ".md5";
 
-  protected static final String URL_MAVEN_SPRING_BOOT_METADATA_MD5 =
-      URL_MAVEN_SPRING_BOOT_METADATA + ".md5";
-
-  protected static final String URL_MAVEN_SPRING_BOOT_ROOT_POM_LEGACY =
-      URL_MAVEN_SPRING_BOOT_URL + "camunda-bpm-spring-boot-starter-root/" +
-          "{version}/camunda-bpm-spring-boot-starter-root-{version}.pom";
-
-  protected static final String URL_MAVEN_CAMUNDA_ROOT_POM =
-      URL_MAVEN_BASE + "camunda-root/{version}/camunda-root-{version}.pom";
-
-  protected static final String URL_MAVEN_CAMUNDA_PARENT_POM =
-      URL_MAVEN_BASE + "camunda-parent/{version}/camunda-parent-{version}.pom";
+  protected static final String URL_MAVEN_C8_POM =
+      URL_MAVEN_C8_BASE + "camunda-spring-boot-starter/" +
+          "{version}/camunda-spring-boot-starter-{version}.pom";
 
   protected static final String XPATH_VERSIONS = "/metadata/versioning/versions/version";
 
   protected static final Pattern REGEX_PATTERN_VERSION = Pattern.compile("^([0-9]+).([0-9]+)(.*)");
 
-  protected static final Set<String> IGNORED_MINOR_VERSIONS = new HashSet<String>() {{
-    add("3.1");
-  }};
 
-  protected static final Set<String> IGNORED_VERSION_TAGS = new HashSet<String>() {{
+  protected static final Set<String> IGNORED_VERSION_TAGS = new HashSet<>() {{
     add("alpha");
+    add("SNAPSHOT");
+    add("-rc");
+    add("beta");
   }};
 
 }

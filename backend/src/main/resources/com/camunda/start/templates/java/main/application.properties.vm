@@ -1,0 +1,7 @@
+spring.application.name=Process Order
+camunda.client.mode=self-managed
+camunda.client.grpc-address=http://127.0.0.1:26500
+camunda.client.rest-address=http://127.0.0.1:8080
+
+logging.level.io.camunda.client.impl.CamundaCallCredentials=ERROR
+

@@ -1,9 +1,10 @@
 package com.camunda.start.update;
 
-import com.camunda.start.update.dto.StarterVersionDto;
-import com.camunda.start.update.dto.StarterVersionWrapperDto;
+import com.camunda.start.update.dto.VersionsDto;
+import com.camunda.start.update.dto.VersionsWrapperDto;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -27,21 +28,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 
-import static com.camunda.start.update.Constants.IGNORED_MINOR_VERSIONS;
 import static com.camunda.start.update.Constants.IGNORED_VERSION_TAGS;
 import static com.camunda.start.update.Constants.REGEX_PATTERN_VERSION;
-import static com.camunda.start.update.Constants.URL_MAVEN_CAMUNDA_ROOT_POM;
-import static com.camunda.start.update.Constants.URL_MAVEN_CAMUNDA_PARENT_POM;
-import static com.camunda.start.update.Constants.URL_MAVEN_SPRING_BOOT_METADATA;
-import static com.camunda.start.update.Constants.URL_MAVEN_SPRING_BOOT_METADATA_MD5;
-import static com.camunda.start.update.Constants.URL_MAVEN_SPRING_BOOT_ROOT_POM_LEGACY;
+import static com.camunda.start.update.Constants.URL_MAVEN_C8_METADATA;
+import static com.camunda.start.update.Constants.URL_MAVEN_C8_METADATA_MD5;
+import static com.camunda.start.update.Constants.URL_MAVEN_C8_POM;
 import static com.camunda.start.update.Constants.XPATH_VERSIONS;
 
 @Component
@@ -49,10 +46,14 @@ public class VersionUpdater {
 
     protected Map<String, ComparableVersion> cachedComparableVersions = new HashMap<>();
 
-    protected StarterVersionWrapperDto starterVersionWrapper;
+    protected VersionsWrapperDto versionsWrapper;
 
-    @Scheduled(cron = "0 * * * * *")
+    @Autowired
+    protected NpmVersionResolver npmVersionResolver;
+
+    @Scheduled(cron = "0 0 * * * *")
     public void updateVersions() {
+        boolean npmChanged = npmVersionResolver.updateVersions();
         String fetchedChecksum = fetchChecksum();
 
         if (!fetchedChecksum.equals(readChecksum())) {
@@ -66,19 +67,20 @@ public class VersionUpdater {
             Collections.sort(latestVersions);
             Collections.reverse(latestVersions);
 
-            starterVersionWrapper = new StarterVersionWrapperDto();
-            starterVersionWrapper.setStarterVersions(getLatestStarterVersions(latestVersions));
-            starterVersionWrapper.setChecksum(fetchedChecksum);
+            versionsWrapper = new VersionsWrapperDto();
+            versionsWrapper.setVersions(getLatestVersions(latestVersions));
+            versionsWrapper.setChecksum(fetchedChecksum);
+        } else if (npmChanged && versionsWrapper != null && versionsWrapper.getVersions() != null) {
+            VersionsDto versions = versionsWrapper.getVersions();
+            versions.setNpmSdkVersion(npmVersionResolver.getLatestSdkVersion());
+            versions.setNpmProcessTestVersion(npmVersionResolver.getLatestProcessTestVersion());
         }
     }
 
     protected void removeIgnoredVersions(Set<String> fetchedVersions) {
-        Iterator<String> iterator = fetchedVersions.iterator();
-        while (iterator.hasNext()) {
-            IGNORED_VERSION_TAGS.stream()
-                .filter(iterator.next()::contains)
-                .forEach(ignoredVersionTag -> iterator.remove());
-        }
+        fetchedVersions.removeIf(version ->
+            IGNORED_VERSION_TAGS.stream().anyMatch(version::contains)
+        );
     }
 
     protected Collection<ComparableVersion> getLatestVersions(Set<String> fetchedVersions) {
@@ -91,19 +93,17 @@ public class VersionUpdater {
             Matcher versionMatcher = REGEX_PATTERN_VERSION.matcher(fetchedVersion);
             if (versionMatcher.find()) {
                 String minorVersion = versionMatcher.group(1) + "." + versionMatcher.group(2);
-                if (!IGNORED_MINOR_VERSIONS.contains(minorVersion)) {
-                    ComparableVersion entireVersion = latestVersionsMap.get(minorVersion);
+                ComparableVersion entireVersion = latestVersionsMap.get(minorVersion);
 
-                    ComparableVersion comparableVersion =
-                        getCachedComparableVersion(fetchedVersion);
+                ComparableVersion comparableVersion =
+                    getCachedComparableVersion(fetchedVersion);
 
-                    if (entireVersion == null) {
-                        latestVersionsMap.put(minorVersion, comparableVersion);
+                if (entireVersion == null) {
+                    latestVersionsMap.put(minorVersion, comparableVersion);
 
-                    } else if (entireVersion.compareTo(comparableVersion) < 0) {
-                        latestVersionsMap.put(minorVersion, comparableVersion);
+                } else if (entireVersion.compareTo(comparableVersion) < 0) {
+                    latestVersionsMap.put(minorVersion, comparableVersion);
 
-                    }
                 }
             }
         });
@@ -111,61 +111,28 @@ public class VersionUpdater {
         return latestVersionsMap.values();
     }
 
-    protected List<StarterVersionDto> getLatestStarterVersions(List<ComparableVersion> majorMinorVersions) {
-        List<StarterVersionDto> starterVersions = new ArrayList<>();
-        
-        for (int i = 0; i < 3; i++) {
-            ComparableVersion majorMinorVersion = majorMinorVersions.get(i);
-
-            String version = majorMinorVersion.toString();
-
-            StarterVersionDto starterVersion = new StarterVersionDto();
-
-            if (majorMinorVersion.compareTo(new ComparableVersion("7.13.0-alpha1")) > 0) {
-
-                starterVersion.setStarterVersion(version);
-                starterVersion.setCamundaVersion(version);
-
-                String url = null;
-                if (majorMinorVersion.compareTo(new ComparableVersion("7.14.0-alpha4")) > 0) {
-                    url = URL_MAVEN_CAMUNDA_PARENT_POM.replace("{version}", version);
-
-                } else {
-                    url = URL_MAVEN_CAMUNDA_ROOT_POM.replace("{version}", version);
-
-                }
-
-                InputStream pom = getInputStreamByUrl(url);
-                Document pomDocument = createPomDocument(pom);
-
-                String springBootVersion = getVersion(pomDocument,
-                    "/project/properties/version.spring-boot");
-
-                starterVersion.setSpringBootVersion(springBootVersion);
-
-            } else { // legacy versions
-
-                starterVersion.setStarterVersion(version);
-
-                String url = URL_MAVEN_SPRING_BOOT_ROOT_POM_LEGACY.replace("{version}", version);
-
-                InputStream pom = getInputStreamByUrl(url);
-                Document pomDocument = createPomDocument(pom);
-
-                String springBootVersion = getVersion(pomDocument,
-                    "/project/properties/spring-boot.version");
-
-                String camundaVersion = getVersion(pomDocument,
-                    "/project/properties/camunda.version");
-
-                starterVersion.setCamundaVersion(camundaVersion);
-                starterVersion.setSpringBootVersion(springBootVersion);
-            }
-
-            starterVersions.add(starterVersion);
+    protected VersionsDto getLatestVersions(List<ComparableVersion> majorMinorVersions) {
+        if (majorMinorVersions.isEmpty()) {
+            return null;
         }
-        
-        return starterVersions;
+
+        String npmSdkVersion = npmVersionResolver.getLatestSdkVersion();
+        String npmProcessTestVersion = npmVersionResolver.getLatestProcessTestVersion();
+
+        String version = majorMinorVersions.get(0).toString();
+
+        VersionsDto versionInfo = new VersionsDto();
+        versionInfo.setCamundaVersion(version);
+        versionInfo.setNpmSdkVersion(npmSdkVersion);
+        versionInfo.setNpmProcessTestVersion(npmProcessTestVersion);
+
+        String url = URL_MAVEN_C8_POM.replace("{version}", version);
+        InputStream pom = getInputStreamByUrl(url);
+        Document pomDocument = createPomDocument(pom);
+
+        versionInfo.setSpringBootVersion(resolveSpringBootVersion(pomDocument, version));
+
+        return versionInfo;
     }
 
     protected String getVersion(Document documentByInputStream, String xPath) {
@@ -178,6 +145,25 @@ public class VersionUpdater {
         } catch (XPathExpressionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected String resolveSpringBootVersion(Document pomDocument, String camundaVersion) {
+        String[] xPaths = new String[] {
+            // explicit spring-boot dependency version
+            "//*[local-name()='dependency']" +
+                "[*[local-name()='groupId']='org.springframework.boot']" +
+                "[*[local-name()='artifactId']='spring-boot']" +
+                "/*[local-name()='version']"
+        };
+
+        for (String xPath : xPaths) {
+            String resolved = getVersion(pomDocument, xPath);
+            if (!resolved.isBlank()) {
+                return resolved;
+            }
+        }
+
+        throw new IllegalStateException("Could not resolve Spring Boot version for Camunda starter version " + camundaVersion);
     }
 
     protected ComparableVersion getCachedComparableVersion(String fetchedVersion) {
@@ -197,7 +183,7 @@ public class VersionUpdater {
     }
 
     protected Set<String> fetchVersions() {
-        InputStream metadataInputStream = getInputStreamByUrl(URL_MAVEN_SPRING_BOOT_METADATA);
+        InputStream metadataInputStream = getInputStreamByUrl(URL_MAVEN_C8_METADATA);
         Document xmlDocument = createPomDocument(metadataInputStream);
 
         NodeList nodeList = null;
@@ -222,12 +208,12 @@ public class VersionUpdater {
     }
 
     protected String readChecksum() {
-        return starterVersionWrapper == null ? null : starterVersionWrapper.getChecksum();
+        return versionsWrapper == null ? null : versionsWrapper.getChecksum();
     }
 
     protected String fetchChecksum() {
         try {
-            return IOUtils.toString(getInputStreamByUrl(URL_MAVEN_SPRING_BOOT_METADATA_MD5),
+            return IOUtils.toString(getInputStreamByUrl(URL_MAVEN_C8_METADATA_MD5),
                 Charset.defaultCharset());
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -273,9 +259,9 @@ public class VersionUpdater {
         }
     }
 
-    public StarterVersionWrapperDto getStarterVersionWrapper() {
+    public VersionsWrapperDto getVersionsWrapper() {
         updateVersions();
-        return starterVersionWrapper;
+        return versionsWrapper;
     }
 
 }

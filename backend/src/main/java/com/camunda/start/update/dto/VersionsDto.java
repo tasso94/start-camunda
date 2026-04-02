@@ -16,19 +16,12 @@
  */
 package com.camunda.start.update.dto;
 
-public class StarterVersionDto {
+public class VersionsDto {
 
-  protected String starterVersion;
   protected String camundaVersion;
   protected String springBootVersion;
-
-  public String getCamundaVersion() {
-    return camundaVersion;
-  }
-
-  public void setCamundaVersion(String camundaVersion) {
-    this.camundaVersion = camundaVersion;
-  }
+  protected String npmSdkVersion;
+  protected String npmProcessTestVersion;
 
   public String getSpringBootVersion() {
     return springBootVersion;
@@ -38,12 +31,28 @@ public class StarterVersionDto {
     this.springBootVersion = springBootVersion;
   }
 
-  public String getStarterVersion() {
-    return starterVersion;
+  public String getCamundaVersion() {
+    return camundaVersion;
   }
 
-  public void setStarterVersion(String starterVersion) {
-    this.starterVersion = starterVersion;
+  public void setCamundaVersion(String camundaVersion) {
+    this.camundaVersion = camundaVersion;
+  }
+
+  public String getNpmSdkVersion() {
+    return npmSdkVersion;
+  }
+
+  public void setNpmSdkVersion(String npmSdkVersion) {
+    this.npmSdkVersion = npmSdkVersion;
+  }
+
+  public String getNpmProcessTestVersion() {
+    return npmProcessTestVersion;
+  }
+
+  public void setNpmProcessTestVersion(String npmProcessTestVersion) {
+    this.npmProcessTestVersion = npmProcessTestVersion;
   }
 
 }

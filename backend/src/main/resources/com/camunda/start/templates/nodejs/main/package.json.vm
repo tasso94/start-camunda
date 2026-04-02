@@ -1,0 +1,31 @@
+{
+  "name": "$artifact",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node ./source/index.ts",
+#if($isProcessTest)
+    "test": "npx jest --config ./source/test/jest.config.js",
+#end
+    "build": "npx tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "description": "",
+  "dependencies": {
+    "@camunda8/sdk": "^$npmSdkVersion"
+  },
+  "devDependencies": {
+#if($isProcessTest)
+    "@camunda8/process-test": "^$npmProcessTestVersion",
+    "@types/jest": "^29.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+#end
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  }
+}
+

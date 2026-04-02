@@ -1,7 +1,0 @@
-#if($persistence == "on-disk")
-spring.datasource.url: jdbc:h2:file:./camunda-h2-database
-
-#end
-camunda.bpm.admin-user:
-  id: $adminUsername
-  password: $adminPassword

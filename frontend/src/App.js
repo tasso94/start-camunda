@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { keyframes } from "@emotion/react";
 
 import {
   Tooltip,
   Link,
   Box,
   Divider,
+  ListItemButton,
+  ListItemIcon,
   ListItemText,
-  ListItem,
   List,
   IconButton,
   Dialog,
@@ -22,16 +24,27 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
-  FormLabel,
   FormControl,
   Container,
   TextField,
 } from "@mui/material";
 
-import { Close, BookOutlined } from "@mui/icons-material";
+import {
+  Close,
+  BookOutlined,
+  Download,
+  FolderOpen,
+  InsertDriveFileOutlined,
+} from "@mui/icons-material";
 
 import SyntaxHighlighter from "react-syntax-highlighter";
 import a11yLight from "react-syntax-highlighter/dist/esm/styles/hljs/a11y-light";
+
+const headerGradientShift = keyframes`
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+`;
 
 const downloadFile = (blob, filename) => {
   const url = URL.createObjectURL(blob);
@@ -47,72 +60,243 @@ const downloadFile = (blob, filename) => {
 const initialFormData = {
   artifact: { value: "my-project" },
   group: { value: "com.example.workflow" },
-  username: { value: "" },
-  password: { value: "" },
-  persistence: { value: "on-disk" },
   javaVersion: { value: "21" },
 };
 
 const initialModules = {
-  "camunda-rest": true,
-  "camunda-webapps": true,
-  "camunda-spin": true,
-  "camunda-assert": false,
-  "spring-boot-security": false,
-  "spring-boot-web": false,
+  "process-test": false,
 };
 
-const mapVersions = (version, releases) => {
-  for (const release of releases) {
-    if (release.starterVersion === version) {
-      return {
-        starterVersion: { value: version },
-        springBootVersion: { value: release.springBootVersion },
-        camundaVersion: { value: release.camundaVersion },
-      };
-    }
+const GROUP_REGEX = /^[a-z_]+(\.[a-z_][a-z0-9_]*)*$/i;
+
+const validateArtifact = (value) => ({ value, error: !value });
+const validateGroup = (value) => ({ value, error: !GROUP_REGEX.test(value) });
+const validateJavaVersion = (value) => {
+  const numericValue = Number(value);
+  return { value, error: !(numericValue >= 17 && numericValue <= 21) };
+};
+
+const mapVersions = (version, release) => {
+  if (release && release.camundaVersion === version) {
+    return {
+      camundaVersion: { value: version },
+      springBootVersion: { value: release.springBootVersion },
+      npmSdkVersion: { value: release.npmSdkVersion },
+      npmProcessTestVersion: { value: release.npmProcessTestVersion },
+    };
   }
 };
 
 const getModuleNames = (modules) => {
-  const filteredModules = Object.keys(modules).filter((name) => {
-    return modules[name];
-  });
-
-  if (
-    !filteredModules.includes("camunda-webapps") &&
-    !filteredModules.includes("camunda-rest")
-  ) {
-    return [...filteredModules, "camunda-base"];
-  } else {
-    return filteredModules;
-  }
+  return Object.keys(modules).filter((name) => modules[name]);
 };
 
 const getPayload = (formData) =>
   Object.entries(formData).reduce((acc, [key, value]) => {
-    if (key !== "springBootVersion" && key !== "starterVersions") {
+    if (key !== "springBootVersion" && key !== "npmSdkVersion" && key !== "npmProcessTestVersion" && key !== "versions") {
       acc[key] = value.value;
     }
     return acc;
   }, {});
 
+const getFileList = (language, formData, modules) => {
+  const artifact = formData.artifact?.value || "my-project";
+  const group = formData.group?.value || "com.example.workflow";
+  const javaPath =
+    artifact + "/src/main/java/" + group.replace(/\./g, "/") + "/";
+
+  if (language === "java") {
+    const files = [
+      {
+        key: "java_main_pom.xml",
+        filename: "pom.xml",
+        type: "xml",
+        path: artifact + "/",
+      },
+      {
+        key: "java_main_application.properties",
+        filename: "application.properties",
+        type: "properties",
+        path: artifact + "/src/main/resources/",
+      },
+      {
+        key: "java_main_process.bpmn",
+        filename: "process.bpmn",
+        type: "xml",
+        path: artifact + "/src/main/resources/",
+      },
+      {
+        key: "java_main_ProcessOrderApplication.java",
+        filename: "ProcessOrderApplication.java",
+        type: "java",
+        path: javaPath,
+      },
+      {
+        key: "java_main_CheckInventoryWorker.java",
+        filename: "CheckInventoryWorker.java",
+        type: "java",
+        path: javaPath,
+      },
+      {
+        key: "java_main_ChargePaymentWorker.java",
+        filename: "ChargePaymentWorker.java",
+        type: "java",
+        path: javaPath,
+      },
+      {
+        key: "java_main_ShipItemsWorker.java",
+        filename: "ShipItemsWorker.java",
+        type: "java",
+        path: javaPath,
+      },
+    ];
+    if (modules["process-test"]) {
+      files.push({
+        key: "java_test_ProcessOrderApplicationTests.java",
+        filename: "ProcessOrderApplicationTests.java",
+        type: "java",
+        path:
+          artifact +
+          "/src/test/java/" +
+          group.replace(/\./g, "/") +
+          "/",
+      });
+      files.push({
+        key: "java_test_application.properties",
+        filename: "application.properties",
+        type: "properties",
+        path: artifact + "/src/test/resources/",
+      });
+    }
+    return files;
+  } else {
+    const files = [
+      {
+        key: "nodejs_main_package.json",
+        filename: "package.json",
+        type: "json",
+        path: artifact + "/",
+      },
+      {
+        key: "nodejs_main_tsconfig.json",
+        filename: "tsconfig.json",
+        type: "json",
+        path: artifact + "/",
+      },
+      {
+        key: "nodejs_main_index.ts",
+        filename: "index.ts",
+        type: "typescript",
+        path: artifact + "/source/",
+      },
+      {
+        key: "nodejs_main_workers.ts",
+        filename: "workers.ts",
+        type: "typescript",
+        path: artifact + "/source/",
+      },
+      {
+        key: "nodejs_main_process.bpmn",
+        filename: "process.bpmn",
+        type: "xml",
+        path: artifact + "/source/resources/",
+      },
+    ];
+    if (modules["process-test"]) {
+      files.push({
+        key: "nodejs_test_process.test.ts",
+        filename: "process.test.ts",
+        type: "typescript",
+        path: artifact + "/source/test/",
+      });
+      files.push({
+        key: "nodejs_test_jest.config.js",
+        filename: "jest.config.js",
+        type: "javascript",
+        path: artifact + "/source/test/",
+      });
+    }
+    return files;
+  }
+};
+
 const App = () => {
   const [formData, setFormData] = useState({});
   const [modules, setModules] = useState(initialModules);
+  const [language, setLanguage] = useState("java");
   const [error, setError] = useState(false);
   const [openExplorer, setOpenExplorer] = useState(false);
   const [sourceCode, setSourceCode] = useState();
+  const [selectedFile, setSelectedFile] = useState(null);
 
+  // Helper to build URL parameters from current state
+  const buildUrlParams = () => {
+    const params = new URLSearchParams();
+    if (language) params.set("language", language);
+    if (formData.artifact?.value) params.set("artifact", formData.artifact.value);
+    if (formData.group?.value && language === "java") params.set("group", formData.group.value);
+    if (formData.javaVersion?.value && language === "java") params.set("javaVersion", formData.javaVersion.value);
+    if (formData.camundaVersion?.value) params.set("camundaVersion", formData.camundaVersion.value);
+    if (modules["process-test"]) params.set("processTest", "true");
+    return params.toString();
+  };
+
+  // Helper to update URL without navigation
+  const updateUrl = () => {
+    const queryString = buildUrlParams();
+    const newUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
+  };
+
+  // Helper to parse URL parameters and apply them
+  const applyUrlParams = (versions) => {
+    if (!versions) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const rawLanguage = params.get("language");
+    const urlLanguage = rawLanguage === "nodejs" || rawLanguage === "java" ? rawLanguage : "java";
+    const urlArtifact = params.get("artifact");
+    const urlGroup = params.get("group");
+    const urlJavaVersion = params.get("javaVersion");
+    const urlCamundaVersion = params.get("camundaVersion");
+    const urlProcessTest = params.get("processTest") === "true";
+
+    setLanguage(urlLanguage);
+
+    // Apply starter version and derived values
+    const fallbackCamundaVersion = versions.camundaVersion;
+    const camundaVersionToApply = urlCamundaVersion || fallbackCamundaVersion;
+    const versionMapping =
+      mapVersions(camundaVersionToApply, versions) ||
+      mapVersions(fallbackCamundaVersion, versions);
+
+    const artifactValue = urlArtifact || initialFormData.artifact.value;
+    const groupValue = urlGroup || initialFormData.group.value;
+    const javaVersionValue = urlJavaVersion || initialFormData.javaVersion.value;
+
+    const newFormData = {
+      ...versionMapping,
+      versions: { value: versions },
+      artifact: validateArtifact(artifactValue),
+      group:
+        urlLanguage === "java"
+          ? validateGroup(groupValue)
+          : { value: groupValue, error: false },
+      javaVersion:
+        urlLanguage === "java"
+          ? validateJavaVersion(javaVersionValue)
+          : { value: javaVersionValue, error: false },
+    };
+    setFormData(newFormData);
+    setModules({ "process-test": urlProcessTest });
+  };
   useEffect(() => {
     fetch("./versions.json").then((response) => {
       if (response.status === 200) {
-        response.json().then(({ starterVersions }) => {
-          setFormData({
-            ...mapVersions(starterVersions[0].starterVersion, starterVersions),
-            starterVersions: { value: starterVersions },
-            ...initialFormData,
-          });
+        response.json().then(({ versions }) => {
+          applyUrlParams(versions);
         });
       }
     });
@@ -128,23 +312,22 @@ const App = () => {
     };
   }, []);
 
+  // Update URL whenever form data, language, or modules change
   useEffect(() => {
-    setError(
-      Object.values(formData).reduce(
-        (acc, element) => acc || element.error,
-        false
-      )
-    );
-  }, [formData]);
+    if (Object.keys(formData).length > 0) {
+      updateUrl();
+    }
+  }, [formData, language, modules]);
+
+  useEffect(() => {
+    const relevantFields = ["artifact", ...(language === "java" ? ["group", "javaVersion"] : [])];
+    setError(relevantFields.some((field) => formData[field]?.error));
+  }, [formData, language]);
 
   const handleClose = () => {
     setSourceCode();
+    setSelectedFile(null);
     setOpenExplorer(false);
-  };
-
-  const getMajorMinor = (version) => {
-    const versionTokens = version.split(".");
-    return versionTokens[0] + "." + versionTokens[1];
   };
 
   const changeModules = (module) => {
@@ -160,6 +343,7 @@ const App = () => {
       },
       body: JSON.stringify({
         ...payload,
+        language,
         modules: getModuleNames(modules),
       }),
     }).then((response) => {
@@ -171,15 +355,17 @@ const App = () => {
     });
   };
 
-  const highlight = (filename, type) => {
+  const highlight = (fileKey, type) => {
+    setSelectedFile(fileKey);
     const payload = getPayload(formData);
-    fetch(`./show/${filename}`, {
+    fetch(`./show/${fileKey}`, {
       method: "post",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         ...payload,
+        language,
         modules: getModuleNames(modules),
       }),
     }).then((response) => {
@@ -192,389 +378,324 @@ const App = () => {
   };
 
   const handleChangeGroup = (newGroup) => {
-    const regex = /^[a-z_]+(\.[a-z_][a-z0-9_]*)*$/i;
     const { group, ...rest } = formData;
     setFormData({
-      group: { value: newGroup, error: !regex.test(newGroup) },
+      group: validateGroup(newGroup),
       ...rest,
     });
   };
 
   return (
     <div className="App">
-      <AppBar position="static" color="default">
+      <AppBar position="static" color="transparent" elevation={0}>
         <Toolbar
           sx={{
-            backgroundImage: "url(./background.png)",
-            backgroundPosition: "50%",
+            background:
+              "linear-gradient(135deg, #000, #280892, #000, #280892)",
+            backgroundSize: "400% 400%",
+            animation: `${headerGradientShift} 12s ease infinite`,
           }}
         >
           <img src="./logo.svg" width={110} alt="Camunda" />
         </Toolbar>
       </AppBar>
+
       <Container
         sx={{
-          marginTop: 8,
-          width: 700,
+          minHeight: "calc(100vh - 120px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          maxWidth: "700px !important",
         }}
       >
         <Paper
           sx={{
-            padding: (theme) => theme.spacing(6, 4),
+            p: { xs: 3, sm: 5 },
+            borderRadius: 3,
+            width: "100%"
           }}
         >
-          <Typography sx={{ marginBottom: 3 }} variant="h5">
-            Camunda 7 Initializr
+          <Typography variant="h5" sx={{ mb: 1 }}>
+            Camunda 8 Initializr
           </Typography>
+          <Typography variant="body2" sx={{ mb: 4, color: "text.secondary" }}>
+            Get started with Camunda 8.{" "}
+            <Link
+              href="https://developers.camunda.com/install-camunda-8/"
+              target="_blank"
+              underline="hover"
+            >
+              Download the Camunda 8 getting started bundle
+            </Link>{" "}
+            to run Camunda 8 locally.
+          </Typography>
+
           {Object.keys(formData).length === 0 && (
-            <Typography>Loading...</Typography>
+            <Typography color="text.secondary">Loading versions…</Typography>
           )}
+
           {Object.keys(formData).length > 0 && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  error={formData.group.error}
-                  label="Group"
-                  fullWidth
-                  id="group"
-                  value={formData.group.value}
-                  onInput={(e) => handleChangeGroup(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  error={formData.artifact.error}
-                  id="artifact"
-                  label="Artifact"
-                  fullWidth
-                  value={formData.artifact.value}
-                  onInput={(e) => {
-                    const newArtifact = e.target.value;
-                    const { artifact, ...rest } = formData;
-                    setFormData({
-                      artifact: {
-                        value: newArtifact,
-                        error: !newArtifact,
-                      },
-                      ...rest,
-                    });
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl id="camunda-version" fullWidth>
-                  <InputLabel htmlFor="camunda-version">
-                    Version
-                  </InputLabel>
-                  <Select
-                    value={formData.starterVersion.value}
-                    onChange={(e) => {
-                      const {
-                        starterVersion,
-                        springBootVersion,
-                        camundaVersion,
-                        ...rest
-                      } = formData;
+            <>
+              <Grid container spacing={2.5}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormControl fullWidth size="small" id="language">
+                    <InputLabel htmlFor="language">Language</InputLabel>
+                    <Select
+                      label="Language"
+                      value={language}
+                      onChange={(e) => {
+                        setLanguage(e.target.value);
+                        setModules(initialModules);
+                      }}
+                    >
+                      <MenuItem value="java">Java</MenuItem>
+                      <MenuItem value="nodejs">NodeJS</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormControl id="camunda-version" fullWidth size="small">
+                    <InputLabel htmlFor="camunda-version">Version</InputLabel>
+                    <Select
+                      label="Version"
+                      value={formData.camundaVersion.value}
+                      onChange={(e) => {
+                        const {
+                          camundaVersion,
+                          springBootVersion,
+                          ...rest
+                        } = formData;
+                        setFormData({
+                          ...mapVersions(
+                            e.target.value,
+                            formData.versions.value
+                          ),
+                          ...rest,
+                        });
+                      }}
+                    >
+                      <MenuItem value={formData.versions.value.camundaVersion}>
+                        {formData.versions.value.camundaVersion}
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {language === "java" && (
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      error={formData.group.error}
+                      label="Group"
+                      size="small"
+                      fullWidth
+                      id="group"
+                      value={formData.group.value}
+                      onInput={(e) => handleChangeGroup(e.target.value)}
+                    />
+                  </Grid>
+                )}
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    error={formData.artifact.error}
+                    id="artifact"
+                    label={language === "java" ? "Artifact" : "Package Name"}
+                    size="small"
+                    fullWidth
+                    value={formData.artifact.value}
+                    onInput={(e) => {
+                      const newArtifact = e.target.value;
+                      const { artifact, ...rest } = formData;
                       setFormData({
-                        ...mapVersions(
-                          e.target.value,
-                          formData.starterVersions.value
-                        ),
+                        artifact: validateArtifact(newArtifact),
                         ...rest,
                       });
                     }}
-                  >
-                    {formData.starterVersions.value.map((versions, idx) => {
-                      return (
-                        <MenuItem key={idx} value={versions.starterVersion}>
-                          {versions.camundaVersion}
-                        </MenuItem>
-                      );
-                    })}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  id="spring-boot-version"
-                  label="Spring Boot Version"
-                  fullWidth
-                  disabled
-                  value={formData.springBootVersion.value}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth id="persistence">
-                  <InputLabel htmlFor="persistence">H2 Database</InputLabel>
-                  <Select
-                    value={formData.persistence.value}
-                    onChange={(e) => {
-                      const { persistence, ...rest } = formData;
-                      setFormData({
-                        persistence: { value: e.target.value },
-                        ...rest,
-                      });
-                    }}
-                  >
-                    <MenuItem value="on-disk">On-Disk</MenuItem>
-                    <MenuItem value="in-memory">In-Memory</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  error={formData.javaVersion.error}
-                  id="java-version"
-                  label="Java Version"
-                  fullWidth
-                  type="number"
-                  value={formData.javaVersion.value}
-                  onInput={(e) => {
-                    const newJavaVersion = e.target.value;
-                    const { javaVersion, ...rest } = formData;
-                    setFormData({
-                      javaVersion: {
-                        value: newJavaVersion,
-                        error: !(newJavaVersion >= 11 && newJavaVersion <= 21),
-                      },
-                      ...rest,
-                    });
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl id="camunda-modules">
-                  <FormLabel component="legend">Modules</FormLabel>
+                  />
+                </Grid>
 
-                  <FormGroup>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          onChange={(e) =>
-                            changeModules({
-                              name: "camunda-rest",
-                              checked: e.target.checked,
-                            })
-                          }
-                          defaultChecked={modules["camunda-rest"]}
-                        />
-                      }
-                      label={
-                        <>
-                          REST API
-                          <Link
-                            sx={{ marginLeft: 1 }}
-                            target="_blank"
-                            href={
-                              "https://docs.camunda.org/manual/" +
-                              getMajorMinor(formData.camundaVersion.value) +
-                              "/reference/rest/"
-                            }
-                          >
-                            <Tooltip title="Go to Docs" placement="top">
-                              <BookOutlined fontSize="small" />
-                            </Tooltip>
-                          </Link>
-                        </>
-                      }
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          onChange={(e) =>
-                            changeModules({
-                              name: "camunda-webapps",
-                              checked: e.target.checked,
-                            })
-                          }
-                          defaultChecked={modules["camunda-webapps"]}
-                        />
-                      }
-                      label={
-                        <>
-                          Webapps
-                          <Link
-                            sx={{ marginLeft: 1 }}
-                            target="_blank"
-                            href={
-                              "https://docs.camunda.org/manual/" +
-                              getMajorMinor(formData.camundaVersion.value) +
-                              "/webapps/cockpit/"
-                            }
-                          >
-                            <Tooltip title="Go to Docs" placement="top">
-                              <BookOutlined fontSize="small" />
-                            </Tooltip>
-                          </Link>
-                        </>
-                      }
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          onChange={(e) =>
-                            changeModules({
-                              name: "camunda-spin",
-                              checked: e.target.checked,
-                            })
-                          }
-                          defaultChecked={modules["camunda-spin"]}
-                        />
-                      }
-                      label={
-                        <>
-                          Spin (XML & JSON)
-                          <Link
-                            sx={{ marginLeft: 1 }}
-                            target="_blank"
-                            href={`https://docs.camunda.org/manual/${getMajorMinor(
-                              formData.camundaVersion.value
-                            )}/reference/spin/`}
-                          >
-                            <Tooltip title="Go to Docs" placement="top">
-                              <BookOutlined fontSize="small" />
-                            </Tooltip>
-                          </Link>
-                        </>
-                      }
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          onChange={(e) =>
-                            changeModules({
-                              name: "camunda-assert",
-                              checked: e.target.checked,
-                            })
-                          }
-                          defaultChecked={modules["camunda-assert"]}
-                        />
-                      }
-                      label={
-                        <>
-                          Assert
-                          <Link
-                            sx={{ marginLeft: 1 }}
-                            target="_blank"
-                            href={`https://docs.camunda.org/manual/${getMajorMinor(
-                              formData.camundaVersion.value
-                            )}/user-guide/testing/#camunda-assertions`}
-                          >
-                            <Tooltip title="Go to Docs" placement="top">
-                              <BookOutlined fontSize="small" />
-                            </Tooltip>
-                          </Link>
-                        </>
-                      }
-                    />
-                  </FormGroup>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl id="spring-boot-modules">
-                  <FormLabel component="legend">Spring Boot Modules</FormLabel>
+                {language === "java" && (
+                  <>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        id="spring-boot-version"
+                        label="Spring Boot Version"
+                        size="small"
+                        fullWidth
+                        disabled
+                        value={formData.springBootVersion.value}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        error={formData.javaVersion.error}
+                        id="java-version"
+                        label="Java Version"
+                        size="small"
+                        fullWidth
+                        type="number"
+                        value={formData.javaVersion.value}
+                        onInput={(e) => {
+                          const newJavaVersion = e.target.value;
+                          const { javaVersion, ...rest } = formData;
+                          setFormData({
+                            javaVersion: validateJavaVersion(newJavaVersion),
+                            ...rest,
+                          });
+                        }}
+                      />
+                    </Grid>
+                  </>
+                )}
 
-                  <FormGroup>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          onChange={(e) =>
-                            changeModules({
-                              name: "spring-boot-security",
-                              checked: e.target.checked,
-                            })
-                          }
-                          defaultChecked={modules["spring-boot-security"]}
-                        />
-                      }
-                      label="Security"
+                {language === "nodejs" && (
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      id="nodejs-sdk-version"
+                      label="@camunda8/sdk Version"
+                      size="small"
+                      fullWidth
+                      disabled
+                      value={formData.npmSdkVersion?.value || ""}
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          onChange={(e) =>
-                            changeModules({
-                              name: "spring-boot-web",
-                              checked: e.target.checked,
-                            })
-                          }
-                          defaultChecked={modules["spring-boot-web"]}
-                        />
-                      }
-                      label="Web"
-                    />
-                  </FormGroup>
-                </FormControl>
+                  </Grid>
+                )}
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  id="username"
-                  label="Admin Username"
-                  fullWidth
-                  value={formData.username.value}
-                  onInput={(e) => {
-                    const { username, ...rest } = formData;
-                    setFormData({
-                      username: { value: e.target.value },
-                      ...rest,
-                    });
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  id="password"
-                  label="Admin Password"
-                  type="password"
-                  fullWidth
-                  value={formData.password.value}
-                  onInput={(e) => {
-                    const { password, ...rest } = formData;
-                    setFormData({
-                      password: { value: e.target.value },
-                      ...rest,
-                    });
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
+
+              <Divider sx={{ my: 3 }} />
+
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "text.secondary",
+                  mb: 1.5,
+                  display: "block",
+                }}
+              >
+                Optional Modules
+              </Typography>
+              <FormControl id="camunda-modules">
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        onChange={(e) =>
+                          changeModules({
+                            name: "process-test",
+                            checked: e.target.checked,
+                          })
+                        }
+                        checked={modules["process-test"]}
+                      />
+                    }
+                    label={
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                      >
+                        <Typography variant="body2">
+                          {language === "java"
+                            ? "Camunda Process Test (CPT)"
+                            : "@camunda8/process-test"}
+                        </Typography>
+                        <Link
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            ml: 0.5,
+                          }}
+                          target="_blank"
+                          href="https://docs.camunda.io/docs/apis-tools/testing/getting-started/"
+                        >
+                          <Tooltip title="Go to Docs" placement="top">
+                            <BookOutlined sx={{ fontSize: "1rem" }} />
+                          </Tooltip>
+                        </Link>
+                      </Box>
+                    }
+                  />
+                </FormGroup>
+              </FormControl>
+
+              {language === "nodejs" && modules["process-test"] && (
+                <Box sx={{ mt: 2 }}>
+                  <TextField
+                    id="nodejs-process-test-version"
+                    label="@camunda8/process-test Version"
+                    size="small"
+                    fullWidth
+                    disabled
+                    value={formData.npmProcessTestVersion?.value || ""}
+                  />
+                </Box>
+              )}
+
+              <Box sx={{ mt: 4, display: "flex", gap: 2, flexWrap: "wrap" }}>
                 <Button
                   variant="contained"
                   color="primary"
-                  sx={{ marginTop: 3 }}
+                  startIcon={<Download />}
                   disabled={error}
                   onClick={generateProject}
                 >
                   Generate Project
                 </Button>
-              </Grid>
-              <Grid item xs={12} sm={6}>
                 <Button
                   variant="contained"
                   color="secondary"
-                  sx={{ marginTop: 3 }}
+                  startIcon={<FolderOpen />}
                   disabled={error}
                   onClick={() => setOpenExplorer(true)}
+                  sx={{ color: "white" }}
                 >
                   Explore Project
                 </Button>
-              </Grid>
-            </Grid>
+              </Box>
+            </>
           )}
         </Paper>
       </Container>
-      <AppBar position="fixed" color="default" sx={{ top: "auto", bottom: 0 }}>
-        <Box align="center" sx={{ padding: 1 }}>
-          <Link href="https://camunda.com/legal/privacy/">
-            Privacy Statement
-          </Link>{" "}
-          | <Link href="https://camunda.com/legal/imprint/">Imprint</Link> |
-          Camunda Services GmbH © 2019 - {new Date().getFullYear()}
+
+      <AppBar
+        position="fixed"
+        color="default"
+        elevation={0}
+        sx={{
+          top: "auto",
+          bottom: 0,
+          borderTop: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Box sx={{ textAlign: "center", py: 1.5 }}>
+          <Typography variant="caption" color="text.secondary">
+            <Link
+              href="https://camunda.com/legal/privacy/"
+              underline="hover"
+            >
+              Privacy Statement
+            </Link>{" "}
+            |{" "}
+            <Link href="https://camunda.com/legal/imprint/" underline="hover">
+              Imprint
+            </Link>{" "}
+            | Camunda Services GmbH © 2019 – {new Date().getFullYear()}
+          </Typography>
         </Box>
       </AppBar>
+
       {Object.keys(formData).length > 0 && (
         <Dialog open={openExplorer} onClose={handleClose} fullScreen>
-          <AppBar sx={{ backgroundColor: (theme) => theme.palette.secondary.main }}>
+          <AppBar
+            sx={{ backgroundColor: (theme) => theme.palette.secondary.main }}
+            elevation={0}
+            position="fixed"
+          >
             <Toolbar>
               <IconButton
                 edge="start"
@@ -590,101 +711,78 @@ const App = () => {
             </Toolbar>
           </AppBar>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={4}>
-              <List sx={{ marginTop: 10 }}>
-                <ListItem button>
-                  <ListItemText
-                    onClick={() => highlight("pom.xml", "xml")}
-                    primary="pom.xml"
-                    secondary={formData.artifact.value + "/"}
-                  />
-                </ListItem>
-                <Divider />
-                <ListItem button>
-                  <ListItemText
-                    onClick={() => highlight("application.yaml", "yaml")}
-                    primary="application.yaml"
-                    secondary={formData.artifact.value + "/src/main/resources/"}
-                  />
-                </ListItem>
-                <Divider />
-                <ListItem button>
-                  <ListItemText
-                    onClick={() => highlight("process.bpmn", "xml")}
-                    primary="process.bpmn"
-                    secondary={formData.artifact.value + "/src/main/resources/"}
-                  />
-                </ListItem>
-                <Divider />
-                <ListItem button>
-                  <ListItemText
-                    onClick={() => highlight("Application.java", "java")}
-                    primary="Application.java"
-                    secondary={
-                      formData.artifact.value +
-                      "/src/main/java/" +
-                      formData.group.value.replace(/\./g, "/") +
-                      "/"
-                    }
-                  />
-                </ListItem>
-                {modules["camunda-assert"] && (
-                  <>
-                    <Divider />
-                    <ListItem button>
-                      <ListItemText
-                        onClick={() => highlight("WorkflowTest.java", "java")}
-                        primary="WorkflowTest.java"
-                        secondary={
-                          formData.artifact.value +
-                          "/src/test/java/" +
-                          formData.group.value.replace(/\./g, "/") +
-                          "/"
-                        }
-                      />
-                    </ListItem>
-                    <Divider />
-                    <ListItem button>
-                      <ListItemText
-                        onClick={() => highlight("application.yaml", "yaml")}
-                        primary="application.yaml"
-                        secondary={formData.artifact.value + "/src/test/resources/"}
-                      />
-                    </ListItem>
-                    <Divider />
-                    <ListItem button>
-                      <ListItemText
-                        onClick={() => highlight("logback-test.xml", "xml")}
-                        primary="logback-test.xml"
-                        secondary={
-                          formData.artifact.value + "/src/test/resources/"
-                        }
-                      />
-                    </ListItem>
-                  </>
+          <Box sx={{ display: "flex", height: "100vh", mt: "64px" }}>
+            <Box
+              sx={{
+                flexShrink: 0,
+                borderRight: "1px solid",
+                borderColor: "divider",
+                overflowY: "auto",
+              }}
+            >
+              <List disablePadding>
+                {getFileList(language, formData, modules).map(
+                  ({ key, filename, type, path }, idx) => (
+                    <React.Fragment key={key}>
+                      {idx > 0 && <Divider />}
+                      <ListItemButton
+                        selected={selectedFile === key}
+                        onClick={() => highlight(key, type)}
+                        sx={{ py: 1.5 }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <InsertDriveFileOutlined
+                            fontSize="small"
+                            color={selectedFile === key ? "secondary" : "action"}
+                          />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={filename}
+                          secondary={path}
+                          primaryTypographyProps={{
+                            variant: "body2",
+                            fontWeight: selectedFile === key ? 600 : 400,
+                          }}
+                          secondaryTypographyProps={{ variant: "caption" }}
+                        />
+                      </ListItemButton>
+                    </React.Fragment>
+                  )
                 )}
               </List>
-            </Grid>
-            <Grid item xs={12} sm={8}>
-              <Box sx={{ marginTop: 10 }}>
-                {sourceCode && (
-                  <pre>
-                    <code style={{ fontSize: "1rem" }}>
-                      <SyntaxHighlighter
-                        showLineNumbers
-                        language={sourceCode.type}
-                        style={a11yLight}
-                        fontSize="1rem"
-                      >
-                        {sourceCode.text}
-                      </SyntaxHighlighter>
-                    </code>
-                  </pre>
-                )}
-              </Box>
-            </Grid>
-          </Grid>
+            </Box>
+
+            <Box sx={{ flex: 1, overflowY: "auto" }}>
+              {sourceCode ? (
+                <SyntaxHighlighter
+                  showLineNumbers
+                  language={sourceCode.type}
+                  style={a11yLight}
+                  customStyle={{
+                    margin: 0,
+                    minHeight: "100%",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  {sourceCode.text}
+                </SyntaxHighlighter>
+              ) : (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    color: "text.secondary",
+                  }}
+                >
+                  <Typography variant="body2">
+                    Select a file to preview
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
         </Dialog>
       )}
     </div>

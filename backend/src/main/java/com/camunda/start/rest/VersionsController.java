@@ -17,7 +17,7 @@
 package com.camunda.start.rest;
 
 import com.camunda.start.update.VersionUpdater;
-import com.camunda.start.update.dto.StarterVersionWrapperDto;
+import com.camunda.start.update.dto.VersionsWrapperDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -30,8 +30,8 @@ public class VersionsController {
   protected VersionUpdater versionUpdater;
 
   @GetMapping(value = "/versions.json")
-  public @ResponseBody StarterVersionWrapperDto getVersions() {
-    return versionUpdater.getStarterVersionWrapper();
+  public @ResponseBody VersionsWrapperDto getVersions() {
+    return versionUpdater.getVersionsWrapper();
   }
 
 }
