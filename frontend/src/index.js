@@ -19,13 +19,14 @@ const theme = createTheme({
       main: red.A400,
     },
     background: {
-      default: '#F0F2F5',
+      default: '#F7F7F7',
     },
   },
   shape: {
     borderRadius: 10,
   },
   typography: {
+    fontFamily: '"IBM Plex Sans", Arial, sans-serif',
     h5: {
       fontWeight: 700,
     },
@@ -66,9 +67,9 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-selected': {
-            backgroundColor: 'rgba(20, 216, 144, 0.1)',
+            backgroundColor: 'rgba(38, 208, 124, 0.1)',
             '&:hover': {
-              backgroundColor: 'rgba(20, 216, 144, 0.15)',
+              backgroundColor: 'rgba(38, 208, 124, 0.15)',
             },
           },
         },
