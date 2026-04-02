@@ -1,8 +1,8 @@
 # Start Camunda Platform
 
-A Webapp to generate & customize your Camunda Spring Boot Starter project.
+A Webapp to generate & customize your Camunda 8 orchestration project.
 
-![Start Camunda Platform](./screenshot.png)
+![start-camunda-screen-recording](https://github.com/user-attachments/assets/5e858260-6963-47fc-a9c9-25ee1bf95d43)
 
 ## Build & Run
 
