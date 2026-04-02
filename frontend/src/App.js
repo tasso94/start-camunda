@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { keyframes } from "@emotion/react";
+import BpmnViewer from "bpmn-js/lib/Viewer";
 
 import {
   Tooltip,
@@ -27,6 +28,8 @@ import {
   FormControl,
   Container,
   TextField,
+  CircularProgress,
+  ButtonGroup,
 } from "@mui/material";
 
 import {
@@ -35,6 +38,8 @@ import {
   Download,
   FolderOpen,
   InsertDriveFileOutlined,
+  Code,
+  AccountTree,
 } from "@mui/icons-material";
 
 import SyntaxHighlighter from "react-syntax-highlighter";
@@ -98,6 +103,8 @@ const getPayload = (formData) =>
     }
     return acc;
   }, {});
+
+const isBpmnFile = (fileKey) => fileKey?.endsWith("process.bpmn");
 
 const getFileList = (language, formData, modules) => {
   const artifact = formData.artifact?.value || "my-project";
@@ -228,6 +235,11 @@ const App = () => {
   const [openExplorer, setOpenExplorer] = useState(false);
   const [sourceCode, setSourceCode] = useState();
   const [selectedFile, setSelectedFile] = useState(null);
+  const [loadingFile, setLoadingFile] = useState(false);
+  const [viewMode, setViewMode] = useState("diagram");
+  const bpmnContainerRef = useRef(null);
+  const bpmnViewerRef = useRef(null);
+  const activeRequestRef = useRef(null);
 
   // Helper to build URL parameters from current state
   const buildUrlParams = () => {
@@ -324,10 +336,58 @@ const App = () => {
     setError(relevantFields.some((field) => formData[field]?.error));
   }, [formData, language]);
 
-  const handleClose = () => {
+  useEffect(() => {
+    if (!(
+      sourceCode?.type === "xml" &&
+      isBpmnFile(sourceCode?.fileKey) &&
+      viewMode === "diagram" &&
+      bpmnContainerRef.current
+    )) {
+      return;
+    }
+
+    if (bpmnViewerRef.current) {
+      bpmnViewerRef.current.destroy();
+      bpmnViewerRef.current = null;
+    }
+
+    const viewer = new BpmnViewer({ container: bpmnContainerRef.current });
+    bpmnViewerRef.current = viewer;
+
+    viewer
+      .importXML(sourceCode.text)
+      .then(() => {
+        const canvas = viewer.get("canvas");
+        canvas.resized();
+        canvas.zoom("fit-viewport", "auto");
+      })
+      .catch((err) => {
+        console.error("Failed to import BPMN XML:", err);
+      });
+
+    return () => {
+      if (bpmnViewerRef.current === viewer) {
+        viewer.destroy();
+        bpmnViewerRef.current = null;
+      }
+    };
+  }, [sourceCode, viewMode, openExplorer]);
+
+  const clearPreview = () => {
+    if (bpmnViewerRef.current) {
+      bpmnViewerRef.current.destroy();
+      bpmnViewerRef.current = null;
+    }
     setSourceCode();
+  };
+
+  const handleClose = () => {
+    clearPreview();
+    activeRequestRef.current = null;
     setSelectedFile(null);
     setOpenExplorer(false);
+    setViewMode("diagram");
+    setLoadingFile(false);
   };
 
   const changeModules = (module) => {
@@ -356,7 +416,23 @@ const App = () => {
   };
 
   const highlight = (fileKey, type) => {
+    // Avoid duplicate requests if the user clicks the currently displayed file again.
+    if (
+      fileKey === selectedFile &&
+      (loadingFile || sourceCode?.fileKey === fileKey)
+    ) {
+      return;
+    }
+
+    // Switching files should immediately remove old preview (including BPMN viewer).
+    if (fileKey !== sourceCode?.fileKey) {
+      clearPreview();
+    }
+
+    activeRequestRef.current = fileKey;
     setSelectedFile(fileKey);
+    setViewMode(isBpmnFile(fileKey) ? "diagram" : "xml");
+    setLoadingFile(true);
     const payload = getPayload(formData);
     fetch(`./show/${fileKey}`, {
       method: "post",
@@ -371,8 +447,18 @@ const App = () => {
     }).then((response) => {
       if (response.status === 200) {
         response.text().then((text) => {
-          setSourceCode({ text, type });
+          if (activeRequestRef.current !== fileKey) {
+            return;
+          }
+          setSourceCode({ text, type, fileKey });
+          setLoadingFile(false);
         });
+      } else if (activeRequestRef.current === fileKey) {
+        setLoadingFile(false);
+      }
+    }).catch(() => {
+      if (activeRequestRef.current === fileKey) {
+        setLoadingFile(false);
       }
     });
   };
@@ -752,35 +838,85 @@ const App = () => {
               </List>
             </Box>
 
-            <Box sx={{ flex: 1, overflowY: "auto" }}>
-              {sourceCode ? (
-                <SyntaxHighlighter
-                  showLineNumbers
-                  language={sourceCode.type}
-                  style={a11yLight}
-                  customStyle={{
-                    margin: 0,
-                    minHeight: "100%",
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  {sourceCode.text}
-                </SyntaxHighlighter>
-              ) : (
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100%",
-                    color: "text.secondary",
-                  }}
-                >
-                  <Typography variant="body2">
-                    Select a file to preview
-                  </Typography>
+            <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+              {sourceCode && isBpmnFile(sourceCode.fileKey) && (
+                <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+                  <ButtonGroup size="small" variant="outlined">
+                    <Button
+                      startIcon={<AccountTree />}
+                      variant={viewMode === "diagram" ? "contained" : "outlined"}
+                      onClick={() => setViewMode("diagram")}
+                    >
+                      Diagram
+                    </Button>
+                    <Button
+                      startIcon={<Code />}
+                      variant={viewMode === "xml" ? "contained" : "outlined"}
+                      onClick={() => setViewMode("xml")}
+                    >
+                      XML
+                    </Button>
+                  </ButtonGroup>
                 </Box>
               )}
+
+              <Box sx={{ flex: 1, overflowY: "auto" }}>
+                {loadingFile ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                    }}
+                  >
+                    <CircularProgress />
+                  </Box>
+                ) : sourceCode ? (
+                  <>
+                    {isBpmnFile(sourceCode.fileKey) && viewMode === "diagram" ? (
+                      <Box
+                        ref={bpmnContainerRef}
+                        sx={{
+                          height: "100%",
+                          width: "100%",
+                          overflow: "hidden",
+                          "& .djs-canvas": {
+                            backgroundColor: "#f5f5f5",
+                          },
+                        }}
+                      />
+                    ) : (
+                      <SyntaxHighlighter
+                        showLineNumbers
+                        language={sourceCode.type}
+                        style={a11yLight}
+                        customStyle={{
+                          margin: 0,
+                          minHeight: "100%",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        {sourceCode.text}
+                      </SyntaxHighlighter>
+                    )}
+                  </>
+                ) : (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                      color: "text.secondary",
+                    }}
+                  >
+                    <Typography variant="body2">
+                      Select a file to preview
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
             </Box>
           </Box>
         </Dialog>
