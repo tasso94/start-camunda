@@ -30,6 +30,7 @@ import {
   TextField,
   CircularProgress,
   ButtonGroup,
+  Chip,
 } from "@mui/material";
 
 import {
@@ -40,6 +41,8 @@ import {
   InsertDriveFileOutlined,
   Code,
   AccountTree,
+  ContentCopy,
+  Check,
 } from "@mui/icons-material";
 
 import SyntaxHighlighter from "react-syntax-highlighter";
@@ -236,10 +239,97 @@ const App = () => {
   const [sourceCode, setSourceCode] = useState();
   const [selectedFile, setSelectedFile] = useState(null);
   const [loadingFile, setLoadingFile] = useState(false);
+  const [copiedCommand, setCopiedCommand] = useState(null);
   const [viewMode, setViewMode] = useState("diagram");
   const bpmnContainerRef = useRef(null);
   const bpmnViewerRef = useRef(null);
   const activeRequestRef = useRef(null);
+  const artifactName = formData.artifact?.value || initialFormData.artifact.value;
+  const camundaVersion = formData.camundaVersion?.value || "latest";
+  const processFilePath =
+    language === "java"
+      ? `./src/main/resources/process.bpmn`
+      : `./source/resources/process.bpmn`;
+  const codeBlockSx = {
+    m: 0,
+    p: 1.1,
+    pt: 1.1,
+    pr: 4.5,
+    minHeight: { xs: 44, sm: 46 },
+    display: "flex",
+    alignItems: "center",
+    borderRadius: 1.25,
+    fontSize: { xs: "0.80rem", sm: "0.85rem" },
+    fontWeight: 600,
+    lineHeight: 1.6,
+    letterSpacing: "0.01em",
+    overflowX: "auto",
+    fontFamily: '"IBM Plex Mono", "Courier New", Courier, monospace',
+    backgroundColor: "#000",
+    color: "#f8fafc",
+  };
+  const stepHeadingSx = {
+    display: "block",
+    width: "100%",
+    pb: 0.75,
+    mb: 1.35,
+    borderBottom: "1px solid",
+    borderColor: "divider",
+    fontWeight: 700,
+    fontSize: { xs: "1rem", sm: "1.08rem" },
+    lineHeight: 1.5,
+    letterSpacing: "0.01em",
+  };
+  const step2FieldSx = {
+    "& .MuiInputBase-root": {
+      borderRadius: 1.1,
+    },
+  };
+
+  const copyCommand = async (command, key) => {
+    const normalizedCommand = command
+      .split("\n")
+      .map((line) => line.replace(/^\s*\$\s?/, ""))
+      .join("\n");
+
+    try {
+      await navigator.clipboard.writeText(normalizedCommand);
+      setCopiedCommand(key);
+      window.setTimeout(() => {
+        setCopiedCommand((current) => (current === key ? null : current));
+      }, 1500);
+    } catch (e) {
+      // Ignore clipboard errors silently; command remains selectable in the UI.
+    }
+  };
+
+  const renderCommandBlock = (command, key) => (
+    <Box sx={{ position: "relative" }}>
+      <Tooltip title={copiedCommand === key ? "Copied" : "Copy command"}>
+        <IconButton
+          size="small"
+          onClick={() => copyCommand(command, key)}
+          aria-label={`copy-${key}`}
+          sx={{
+            position: "absolute",
+            top: 10,
+            right: 8,
+            zIndex: 1,
+            bgcolor: "transparent",
+            color: "white",
+            "&:hover": {
+              bgcolor: "rgba(252, 93, 13, 0.12)",
+            },
+          }}
+        >
+          {copiedCommand === key ? <Check fontSize="inherit" /> : <ContentCopy fontSize="inherit" />}
+        </IconButton>
+      </Tooltip>
+      <Box component="pre" sx={codeBlockSx}>
+        {command}
+      </Box>
+    </Box>
+  );
 
   // Helper to build URL parameters from current state
   const buildUrlParams = () => {
@@ -277,7 +367,7 @@ const App = () => {
 
     setLanguage(urlLanguage);
 
-    // Apply starter version and derived values
+    // Apply version and derived values.
     const fallbackCamundaVersion = versions.camundaVersion;
     const camundaVersionToApply = urlCamundaVersion || fallbackCamundaVersion;
     const versionMapping =
@@ -301,6 +391,7 @@ const App = () => {
           ? validateJavaVersion(javaVersionValue)
           : { value: javaVersionValue, error: false },
     };
+
     setFormData(newFormData);
     setModules({ "process-test": urlProcessTest });
   };
@@ -482,50 +573,74 @@ const App = () => {
             animation: `${headerGradientShift} 12s ease infinite`,
           }}
         >
-          <img src="./logo.svg" width={110} alt="Camunda" />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <img src="./logo.svg" width={110} alt="Camunda" />
+            <Typography
+              sx={{
+                color: "common.white",
+                fontWeight: 200,
+                fontSize: { xs: "1.1rem", sm: "2rem" },
+                letterSpacing: "0.03em",
+              }}
+            >
+              Initializr
+            </Typography>
+          </Box>
         </Toolbar>
       </AppBar>
 
       <Container
         sx={{
-          minHeight: "calc(100vh - 120px)",
+          minHeight: "calc(100vh - 128px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          py: { xs: 1.5, sm: 2.5 },
           maxWidth: "700px !important",
         }}
       >
         <Paper
           sx={{
-            p: { xs: 3, sm: 5 },
+            p: { xs: 2.5, sm: 4 },
             borderRadius: 3,
             width: "100%"
           }}
         >
-          <Typography variant="h5" sx={{ mb: 1 }}>
-            Camunda 8 Initializr
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 4, color: "text.secondary" }}>
-            Get started with Camunda 8.{" "}
-            <Link
-              href="https://developers.camunda.com/install-camunda-8/"
-              target="_blank"
-              underline="hover"
+          {Object.keys(formData).length === 0 ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: "500px",
+                gap: 2,
+              }}
             >
-              Download the Camunda 8 getting started bundle
-            </Link>{" "}
-            to run Camunda 8 locally.
-          </Typography>
-
-          {Object.keys(formData).length === 0 && (
-            <Typography color="text.secondary">Loading versions…</Typography>
-          )}
-
-          {Object.keys(formData).length > 0 && (
+              <CircularProgress size={48} />
+              <Typography color="text.secondary">Loading…</Typography>
+            </Box>
+          ) : (
             <>
-              <Grid container spacing={2.5}>
+              <Typography variant="subtitle2" sx={stepHeadingSx}>
+                Step 1: Install and start
+              </Typography>
+
+              <Container disableGutters sx={{ m: "20px 0 30px 0" }}>
+              <Box sx={{ display: "grid", gap: 1 }}>
+                {renderCommandBlock(`$ npm install -g @camunda8/cli`, "step1-install")}
+                {renderCommandBlock(`$ c8ctl cluster start ${camundaVersion}`, "step1-start")}
+              </Box>
+              </Container>
+
+              <Typography variant="subtitle2" sx={{ ...stepHeadingSx, mt: { xs: 2.25, sm: 2.75 } }}>
+                Step 2: Initialize your project
+              </Typography>
+
+              <Container disableGutters sx={{ m: "20px 0 30px 0" }}>
+              <Grid container spacing={{ xs: 2, sm: 2.25 }} sx={{ mt: 0.4 }}>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth size="small" id="language">
+                  <FormControl fullWidth size="small" id="language" sx={step2FieldSx}>
                     <InputLabel htmlFor="language">Language</InputLabel>
                     <Select
                       label="Language"
@@ -536,13 +651,13 @@ const App = () => {
                       }}
                     >
                       <MenuItem value="java">Java</MenuItem>
-                      <MenuItem value="nodejs">NodeJS</MenuItem>
+                      <MenuItem value="nodejs">Node.js</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl id="camunda-version" fullWidth size="small">
+                  <FormControl id="camunda-version" fullWidth size="small" sx={step2FieldSx}>
                     <InputLabel htmlFor="camunda-version">Version</InputLabel>
                     <Select
                       label="Version"
@@ -576,6 +691,7 @@ const App = () => {
                       label="Group"
                       size="small"
                       fullWidth
+                      sx={step2FieldSx}
                       id="group"
                       value={formData.group.value}
                       onInput={(e) => handleChangeGroup(e.target.value)}
@@ -590,6 +706,7 @@ const App = () => {
                     label={language === "java" ? "Artifact" : "Package Name"}
                     size="small"
                     fullWidth
+                    sx={step2FieldSx}
                     value={formData.artifact.value}
                     onInput={(e) => {
                       const newArtifact = e.target.value;
@@ -610,6 +727,7 @@ const App = () => {
                         label="Spring Boot Version"
                         size="small"
                         fullWidth
+                        sx={step2FieldSx}
                         disabled
                         value={formData.springBootVersion.value}
                       />
@@ -621,6 +739,7 @@ const App = () => {
                         label="Java Version"
                         size="small"
                         fullWidth
+                        sx={step2FieldSx}
                         type="number"
                         value={formData.javaVersion.value}
                         onInput={(e) => {
@@ -643,6 +762,7 @@ const App = () => {
                       label="@camunda8/sdk Version"
                       size="small"
                       fullWidth
+                      sx={step2FieldSx}
                       disabled
                       value={formData.npmSdkVersion?.value || ""}
                     />
@@ -653,17 +773,15 @@ const App = () => {
               <Divider sx={{ my: 3 }} />
 
               <Typography
-                variant="caption"
+                variant="subtitle2"
                 sx={{
                   fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
                   color: "text.secondary",
-                  mb: 1.5,
+                  mb: 1.25,
                   display: "block",
                 }}
               >
-                Optional Modules
+                Optional modules
               </Typography>
               <FormControl id="camunda-modules">
                 <FormGroup>
@@ -689,6 +807,21 @@ const App = () => {
                             ? "Camunda Process Test (CPT)"
                             : "@camunda8/process-test"}
                         </Typography>
+                        {language === "nodejs" && (
+                          <Chip
+                            label="Experimental"
+                            size="small"
+                            sx={{
+                              height: 18,
+                              fontSize: "0.65rem",
+                              fontWeight: 600,
+                              bgcolor: "rgba(252, 93, 13, 0.1)",
+                              color: "#FC5D0D",
+                              border: "1px solid rgba(252, 93, 13, 0.3)",
+                              "& .MuiChip-label": { px: 0.75 },
+                            }}
+                          />
+                        )}
                         <Link
                           sx={{
                             display: "flex",
@@ -696,7 +829,9 @@ const App = () => {
                             ml: 0.5,
                           }}
                           target="_blank"
-                          href="https://docs.camunda.io/docs/apis-tools/testing/getting-started/"
+                          href={language === "java"
+                            ? "https://docs.camunda.io/docs/apis-tools/testing/getting-started/"
+                            : "https://github.com/jwulf/camunda-process-test-js"}
                         >
                           <Tooltip title="Go to Docs" placement="top">
                             <BookOutlined sx={{ fontSize: "1rem" }} />
@@ -713,35 +848,57 @@ const App = () => {
                   <TextField
                     id="nodejs-process-test-version"
                     label="@camunda8/process-test Version"
-                    size="small"
+                    size="medium"
                     fullWidth
+                    sx={step2FieldSx}
                     disabled
                     value={formData.npmProcessTestVersion?.value || ""}
                   />
                 </Box>
               )}
 
-              <Box sx={{ mt: 4, display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <Box
+                sx={{
+                  mt: 2.75,
+                  display: "flex",
+                  gap: 1.25,
+                  flexWrap: "nowrap",
+                }}
+              >
                 <Button
+                  size="medium"
                   variant="contained"
                   color="primary"
                   startIcon={<Download />}
                   disabled={error}
                   onClick={generateProject}
+                  sx={{ flex: 1 }}
                 >
                   Generate Project
                 </Button>
                 <Button
+                  size="medium"
                   variant="contained"
                   color="secondary"
                   startIcon={<FolderOpen />}
                   disabled={error}
                   onClick={() => setOpenExplorer(true)}
-                  sx={{ color: "white" }}
+                  sx={{ color: "white", flex: 1 }}
                 >
                   Explore Project
                 </Button>
               </Box>
+              </Container>
+
+              <Typography variant="subtitle2" sx={{ ...stepHeadingSx, mt: { xs: 2.25, sm: 2.75 } }}>
+                Step 3: Deploy and start your first process
+              </Typography>
+              <Container disableGutters sx={{ m: "20px 0 0 0" }}>
+              <Box sx={{ display: "grid", gap: 1 }}>
+                {renderCommandBlock(`$ c8ctl deploy ${processFilePath}`, "step3-deploy")}
+                {renderCommandBlock(`$ c8ctl create pi --id=${artifactName}-process`, "step3-create")}
+              </Box>
+              </Container>
             </>
           )}
         </Paper>
@@ -792,7 +949,7 @@ const App = () => {
                 <Close />
               </IconButton>
               <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                Project Explorer
+                Project explorer
               </Typography>
             </Toolbar>
           </AppBar>
